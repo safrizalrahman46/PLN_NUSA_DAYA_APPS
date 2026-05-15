@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../data/dummy/dummy_data.dart';
@@ -21,6 +22,7 @@ class HeatmapStatusTable extends StatelessWidget {
     final slots = DateHelper.reportSlots();
 
     return AppCard(
+      gradient: AppColors.softSurfaceGradient,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -37,7 +39,9 @@ class HeatmapStatusTable extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       'Tanggal: $dateLabel',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       'Auto refresh: $lastUpdatedLabel',
@@ -64,6 +68,9 @@ class HeatmapStatusTable extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
+              headingRowColor: WidgetStatePropertyAll(
+                AppColors.primary.withValues(alpha: 0.08),
+              ),
               columns: [
                 const DataColumn(label: Text('Unit')),
                 ...slots.map((slot) => DataColumn(label: Text(slot))),
@@ -86,6 +93,9 @@ class HeatmapStatusTable extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: _colorOf(value),
                                 borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                ),
                               ),
                             ),
                           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/section_title.dart';
@@ -16,11 +17,14 @@ class AdminManagementPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Master Data'),
-          bottom: const TabBar(
+          bottom: TabBar(
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSoft,
             tabs: [
-              Tab(text: 'Operator'),
-              Tab(text: 'Unit'),
-              Tab(text: 'Mesin'),
+              const Tab(text: 'Operator'),
+              const Tab(text: 'Unit'),
+              const Tab(text: 'Mesin'),
             ],
           ),
         ),
@@ -79,35 +83,76 @@ class _SectionList extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       children: [
         AppCard(
+          gradient: AppColors.softSurfaceGradient,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionTitle(title: title, subtitle: subtitle),
               const SizedBox(height: 16),
-              AppButton(
-                label: buttonLabel,
-                onPressed: () =>
-                    _snack(context, '$buttonLabel dummy dijalankan.'),
-                fullWidth: false,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                    ),
+                    child: Text(
+                      'Total ${items.length}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  AppButton(
+                    label: buttonLabel,
+                    onPressed: () =>
+                        _snack(context, '$buttonLabel dummy dijalankan.'),
+                    fullWidth: false,
+                  ),
+                ],
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        ...items.map(
-          (item) => Padding(
+        ...items.asMap().entries.map(
+          (entry) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: AppCard(
+              gradient: AppColors.softSurfaceGradient,
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(item),
+                leading: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      (entry.key + 1).toString(),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                title: Text(entry.value),
                 subtitle: const Text(
                   'Edit / nonaktifkan / sinkronkan master data',
                 ),
-                trailing: IconButton(
-                  onPressed: () =>
-                      _snack(context, 'Fitur edit master data dummy.'),
-                  icon: const Icon(Icons.edit_rounded),
+                trailing: FilledButton.tonalIcon(
+                  onPressed: () => _snack(context, 'Fitur edit master data dummy.'),
+                  icon: const Icon(Icons.edit_rounded, size: 18),
+                  label: const Text('Edit'),
                 ),
               ),
             ),

@@ -22,6 +22,8 @@ class PhotoRequirementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final narrow = MediaQuery.of(context).size.width < 420;
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,25 +33,41 @@ class PhotoRequirementCard extends StatelessWidget {
             subtitle: 'Selfie operator dan foto mesin wajib diambil',
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _PhotoBox(
-                  title: 'Selfie Operator',
-                  path: selfiePath,
-                  onTap: onCaptureSelfie,
+          narrow
+              ? Column(
+                  children: [
+                    _PhotoBox(
+                      title: 'Selfie Operator',
+                      path: selfiePath,
+                      onTap: onCaptureSelfie,
+                    ),
+                    const SizedBox(height: 12),
+                    _PhotoBox(
+                      title: 'Foto Mesin',
+                      path: machinePhotoPath,
+                      onTap: onCaptureMachine,
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: _PhotoBox(
+                        title: 'Selfie Operator',
+                        path: selfiePath,
+                        onTap: onCaptureSelfie,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _PhotoBox(
+                        title: 'Foto Mesin',
+                        path: machinePhotoPath,
+                        onTap: onCaptureMachine,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _PhotoBox(
-                  title: 'Foto Mesin',
-                  path: machinePhotoPath,
-                  onTap: onCaptureMachine,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

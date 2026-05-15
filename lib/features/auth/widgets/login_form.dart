@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 
@@ -74,7 +75,13 @@ class LoginForm extends StatelessWidget {
                   onRememberChanged(value ?? false);
                 },
               ),
-              const Text('Ingat saya'),
+              Text(
+                'Ingat saya',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const Spacer(),
               TextButton(
                 onPressed: onForgotPassword,

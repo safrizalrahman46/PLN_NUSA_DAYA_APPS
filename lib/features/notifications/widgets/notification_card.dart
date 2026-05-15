@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/app_card.dart';
 
@@ -31,6 +32,7 @@ class NotificationCard extends StatelessWidget {
     };
 
     return AppCard(
+      gradient: AppColors.softSurfaceGradient,
       borderColor: isRead ? null : color.withValues(alpha: 0.3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,7 +104,10 @@ class NotificationCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   DateHelper.formatDateTime(parsedTime),
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSoft,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

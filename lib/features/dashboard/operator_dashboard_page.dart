@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/network_info.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_helper.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_error_state.dart';
@@ -38,10 +39,14 @@ class OperatorDashboardPage extends ConsumerStatefulWidget {
 
 class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
   Timer? _timer;
+  var _animateIn = false;
 
   @override
   void initState() {
     super.initState();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _animateIn = true);
+    });
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -77,10 +82,18 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
             DashboardHeader(user: user, online: online),
             const SizedBox(height: 18),
             if (!online)
-              const AppCard(
+              AppCard(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.highlight.withValues(alpha: 0.16),
+                    Colors.white,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.wifi_off_rounded, color: Colors.orange),
+                    Icon(Icons.wifi_off_rounded, color: AppColors.warning),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -94,117 +107,152 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
             summary.when(
               data: (data) => Column(
                 children: [
-                  NextReportCard(
-                    nextReportAt: data.nextReportAt,
-                    countdownText: DateHelper.countdownText(data.nextReportAt),
+                  _AnimatedSection(
+                    index: 0,
+                    animateIn: _animateIn,
+                    child: NextReportCard(
+                      nextReportAt: data.nextReportAt,
+                      countdownText: DateHelper.countdownText(data.nextReportAt),
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: MediaQuery.of(context).size.width >= 700
-                        ? 4
-                        : 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.15,
-                    children: [
-                      SummaryCard(
-                        title: 'Laporan Hari Ini',
-                        value: data.todayReports.toString(),
-                        icon: Icons.receipt_long_rounded,
-                      ),
-                      SummaryCard(
-                        title: 'Pending Sync',
-                        value: data.pendingSync.toString(),
-                        icon: Icons.cloud_upload_rounded,
-                        tone: SummaryTone.warning,
-                      ),
-                      SummaryCard(
-                        title: 'Laporan Sukses',
-                        value: data.successReports.toString(),
-                        icon: Icons.check_circle_rounded,
-                        tone: SummaryTone.success,
-                      ),
-                      SummaryCard(
-                        title: 'Laporan Abnormal',
-                        value: data.abnormalReports.toString(),
-                        icon: Icons.warning_amber_rounded,
-                        tone: SummaryTone.danger,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  QuickActionGrid(
-                    onInput: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const InputLogsheetPage(),
-                      ),
-                    ),
-                    onHistory: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const HistoryPage(),
-                      ),
-                    ),
-                    onPending: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PendingUploadPage(),
-                      ),
-                    ),
-                    onProfile: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ProfilePage(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  UnitQuickAccessCard(
-                    units: DummyData.units,
-                    lastSelectedUnitId: lastSelectedUnitId,
-                    onPickUnit: (unit) {
-                      hive.settingsBox.put('last_selected_unit_id', unit.id);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              InputLogsheetPage(initialUnitId: unit.id),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 18),
-                  AppCard(
-                    child: Row(
+                  _AnimatedSection(
+                    index: 1,
+                    animateIn: _animateIn,
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: MediaQuery.of(context).size.width >= 700
+                          ? 4
+                          : 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      physics: const NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.15,
                       children: [
-                        Expanded(
-                          child: _ScopeInfo(
-                            label: 'Cakupan Lokasi',
-                            value: '${DummyData.units.length} unit',
-                          ),
+                        SummaryCard(
+                          title: 'Laporan Hari Ini',
+                          value: data.todayReports.toString(),
+                          icon: Icons.receipt_long_rounded,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _ScopeInfo(
-                            label: 'Total Mesin',
-                            value: '${DummyData.machines.length} mesin',
-                          ),
+                        SummaryCard(
+                          title: 'Pending Sync',
+                          value: data.pendingSync.toString(),
+                          icon: Icons.cloud_upload_rounded,
+                          tone: SummaryTone.warning,
                         ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: _ScopeInfo(
-                            label: 'Mode Input',
-                            value: '1 mesin / 1 jam',
-                          ),
+                        SummaryCard(
+                          title: 'Laporan Sukses',
+                          value: data.successReports.toString(),
+                          icon: Icons.check_circle_rounded,
+                          tone: SummaryTone.success,
+                        ),
+                        SummaryCard(
+                          title: 'Laporan Abnormal',
+                          value: data.abnormalReports.toString(),
+                          icon: Icons.warning_amber_rounded,
+                          tone: SummaryTone.danger,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 18),
-                  TodayReportStatus(summary: data),
+                  _AnimatedSection(
+                    index: 2,
+                    animateIn: _animateIn,
+                    child: QuickActionGrid(
+                      onInput: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const InputLogsheetPage(),
+                        ),
+                      ),
+                      onHistory: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const HistoryPage(),
+                        ),
+                      ),
+                      onPending: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PendingUploadPage(),
+                        ),
+                      ),
+                      onProfile: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ProfilePage(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _AnimatedSection(
+                    index: 3,
+                    animateIn: _animateIn,
+                    child: UnitQuickAccessCard(
+                      units: DummyData.units,
+                      lastSelectedUnitId: lastSelectedUnitId,
+                      onPickUnit: (unit) {
+                        hive.settingsBox.put('last_selected_unit_id', unit.id);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                InputLogsheetPage(initialUnitId: unit.id),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _AnimatedSection(
+                    index: 4,
+                    animateIn: _animateIn,
+                    child: AppCard(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final tileWidth = constraints.maxWidth < 420
+                              ? constraints.maxWidth
+                              : (constraints.maxWidth - 12) / 2;
+
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              SizedBox(
+                                width: tileWidth,
+                                child: _ScopeInfo(
+                                  label: 'Cakupan Lokasi',
+                                  value: '${DummyData.units.length} unit',
+                                ),
+                              ),
+                              SizedBox(
+                                width: tileWidth,
+                                child: _ScopeInfo(
+                                  label: 'Total Mesin',
+                                  value: '${DummyData.machines.length} mesin',
+                                ),
+                              ),
+                              SizedBox(
+                                width: tileWidth,
+                                child: const _ScopeInfo(
+                                  label: 'Mode Input',
+                                  value: '1 mesin / 1 jam',
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _AnimatedSection(
+                    index: 5,
+                    animateIn: _animateIn,
+                    child: TodayReportStatus(summary: data),
+                  ),
                 ],
               ),
               loading: () => Column(
@@ -234,6 +282,32 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
   }
 }
 
+class _AnimatedSection extends StatelessWidget {
+  const _AnimatedSection({
+    required this.index,
+    required this.animateIn,
+    required this.child,
+  });
+
+  final int index;
+  final bool animateIn;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSlide(
+      duration: Duration(milliseconds: 320 + (index * 80)),
+      curve: Curves.easeOutCubic,
+      offset: animateIn ? Offset.zero : const Offset(0, 0.08),
+      child: AnimatedOpacity(
+        duration: Duration(milliseconds: 280 + (index * 80)),
+        opacity: animateIn ? 1 : 0,
+        child: child,
+      ),
+    );
+  }
+}
+
 class _ScopeInfo extends StatelessWidget {
   const _ScopeInfo({required this.label, required this.value});
 
@@ -246,14 +320,25 @@ class _ScopeInfo extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
+        gradient: AppColors.softSurfaceGradient,
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 6),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );

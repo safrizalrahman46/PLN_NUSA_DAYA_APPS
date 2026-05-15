@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/widgets/app_card.dart';
 import '../auth/auth_controller.dart';
@@ -19,8 +20,20 @@ class SettingsPage extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         children: [
           AppCard(
+            gradient: AppColors.softSurfaceGradient,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  'Preferensi Aplikasi',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Atur pengalaman aplikasi untuk kebutuhan operasional harian.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 14),
                 SwitchListTile(
                   value: settings.themeMode == ThemeMode.dark,
                   onChanged: (value) =>
@@ -48,14 +61,17 @@ class SettingsPage extends ConsumerWidget {
                       .toggleNotifications(value),
                   title: const Text('Notifikasi'),
                 ),
+                const Divider(height: 20),
                 ListTile(
+                  leading: const Icon(Icons.language_rounded),
                   title: const Text('Bahasa'),
                   subtitle: Text(settings.language),
                   trailing: const Icon(Icons.chevron_right_rounded),
                 ),
                 ListTile(
+                  leading: const Icon(Icons.cleaning_services_rounded),
                   title: const Text('Clear cache'),
-                  trailing: const Icon(Icons.cleaning_services_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () async {
                     await ref.read(appSettingsProvider.notifier).clearCache();
                     if (!context.mounted) return;
@@ -67,8 +83,12 @@ class SettingsPage extends ConsumerWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.danger,
+                  ),
                   title: const Text('Logout'),
-                  trailing: const Icon(Icons.logout_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () async {
                     await ref.read(authControllerProvider.notifier).logout();
                     if (!context.mounted) return;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_colors.dart';
+
 import '../history/history_page.dart';
 import '../logsheet/input_logsheet_page.dart';
 import '../profile/profile_page.dart';
@@ -41,6 +43,8 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
                   onPressed: _openInput,
                   icon: const Icon(Icons.edit_note_rounded),
                   label: const Text('Input'),
+                  backgroundColor: AppColors.highlight,
+                  foregroundColor: AppColors.primaryDark,
                 ),
               ),
               destinations: const [
@@ -74,6 +78,8 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
         onPressed: _openInput,
         icon: const Icon(Icons.edit_note_rounded),
         label: const Text('Input Logsheet'),
+        backgroundColor: AppColors.highlight,
+        foregroundColor: AppColors.primaryDark,
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/network/network_info.dart';
@@ -26,33 +27,64 @@ class ProfilePage extends ConsumerWidget {
         padding: const EdgeInsets.all(20),
         children: [
           AppCard(
+            gradient: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkGradient
+                : AppColors.heroGradient,
+            borderColor: Colors.transparent,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CircleAvatar(
-                  radius: 40,
-                  child: Icon(Icons.person_rounded, size: 38),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 38,
+                      backgroundColor: Colors.white.withValues(alpha: 0.24),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        size: 36,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.name ?? '-',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${user?.username ?? '-'} • ${user?.role.label ?? '-'}',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  user?.name ?? '-',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.username ?? '-',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 4),
-                Text(
                   user?.role.label ?? '-',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   user?.isOperator == true
                       ? 'Dapat memilih semua unit PLTD'
                       : (user?.unitName ?? '-'),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -71,7 +103,9 @@ class ProfilePage extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Text(
                   AppStrings.appVersion,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                 ),
               ],
             ),
@@ -81,6 +115,7 @@ class ProfilePage extends ConsumerWidget {
             child: Column(
               children: [
                 ListTile(
+                  leading: const Icon(Icons.edit_rounded),
                   title: const Text('Edit profile'),
                   subtitle: const Text(
                     'Perubahan profil untuk tahap awal masih dummy',
@@ -89,6 +124,7 @@ class ProfilePage extends ConsumerWidget {
                   onTap: () => _snack(context, 'Edit profile dummy.'),
                 ),
                 ListTile(
+                  leading: const Icon(Icons.lock_reset_rounded),
                   title: const Text('Change password'),
                   subtitle: const Text(
                     'Ubah password operator melalui admin/supervisor',
@@ -97,6 +133,7 @@ class ProfilePage extends ConsumerWidget {
                   onTap: () => _snack(context, 'Change password dummy.'),
                 ),
                 ListTile(
+                  leading: const Icon(Icons.tune_rounded),
                   title: const Text('Settings'),
                   subtitle: const Text(
                     'Tema, sinkronisasi, GPS, dan notifikasi',
@@ -106,6 +143,7 @@ class ProfilePage extends ConsumerWidget {
                 ),
                 if (canManageMaster)
                   ListTile(
+                    leading: const Icon(Icons.dataset_rounded),
                     title: const Text('Master Data'),
                     subtitle: const Text(
                       'Kelola user, unit, dan serial number mesin',
@@ -122,6 +160,7 @@ class ProfilePage extends ConsumerWidget {
                   ),
                 if (canManageSystem)
                   ListTile(
+                    leading: const Icon(Icons.admin_panel_settings_rounded),
                     title: const Text('Kontrol Sistem'),
                     subtitle: const Text(
                       'Konfigurasi global dan kontrol khusus superadmin',
@@ -137,8 +176,12 @@ class ProfilePage extends ConsumerWidget {
                     },
                   ),
                 ListTile(
+                  leading: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.danger,
+                  ),
                   title: const Text('Logout'),
-                  trailing: const Icon(Icons.logout_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () async {
                     await ref.read(authControllerProvider.notifier).logout();
                     if (!context.mounted) return;
@@ -170,18 +213,37 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onHero = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).dividerColor),
+        color: onHero
+            ? Colors.white.withValues(alpha: 0.12)
+            : Colors.white.withValues(alpha: 0.9),
+        border: Border.all(
+          color: onHero
+              ? Colors.white.withValues(alpha: 0.28)
+              : Theme.of(context).dividerColor,
+        ),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: onHero ? Colors.white70 : AppColors.textSoft,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: onHero ? Colors.white : AppColors.text,
+            ),
+          ),
         ],
       ),
     );

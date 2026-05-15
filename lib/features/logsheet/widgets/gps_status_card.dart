@@ -23,7 +23,7 @@ class GpsStatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionTitle(
-            title: 'GPS Validation',
+            title: 'Validasi GPS',
             subtitle: 'Validasi posisi operator saat submit',
           ),
           const SizedBox(height: 16),
@@ -38,6 +38,8 @@ class GpsStatusCard extends StatelessWidget {
             Text(
               'Jarak dari unit: ${result!.distanceFromUnit.toStringAsFixed(1)} m',
             ),
+            Text('Jalan: ${result!.street}'),
+            Text('Area: ${result!.locality}'),
           ],
           const SizedBox(height: 14),
           AppButton(

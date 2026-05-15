@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_badge.dart';
@@ -21,12 +22,31 @@ class LogsheetHistoryCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: AppCard(
+        gradient: AppColors.softSurfaceGradient,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              logsheet.proofId,
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    logsheet.proofId,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
             Text(
@@ -44,9 +64,19 @@ class LogsheetHistoryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              '${logsheet.unitName} • ${logsheet.serialNumber}',
-              style: Theme.of(context).textTheme.titleMedium,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                '${logsheet.unitName} • ${logsheet.serialNumber}',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ),

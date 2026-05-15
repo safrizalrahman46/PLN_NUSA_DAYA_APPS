@@ -18,12 +18,21 @@ class SubmitBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final narrow = MediaQuery.of(context).size.width < 380;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Row(
+        child: OverflowBar(
+          spacing: 12,
+          overflowSpacing: 12,
+          alignment: MainAxisAlignment.center,
+          overflowAlignment: OverflowBarAlignment.center,
           children: [
-            Expanded(
+            SizedBox(
+              width: narrow
+                  ? double.infinity
+                  : (MediaQuery.of(context).size.width - 44) / 2,
               child: AppButton(
                 label: 'Simpan Draft',
                 onPressed: onSaveDraft,
@@ -31,8 +40,10 @@ class SubmitBottomBar extends StatelessWidget {
                 isLoading: isSaving,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
+            SizedBox(
+              width: narrow
+                  ? double.infinity
+                  : (MediaQuery.of(context).size.width - 44) / 2,
               child: AppButton(
                 label: 'Submit Logsheet',
                 onPressed: onSubmit,

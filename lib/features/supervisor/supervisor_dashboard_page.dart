@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_helper.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_error_state.dart';
@@ -41,10 +42,14 @@ class _SupervisorDashboardPageState
   Timer? _timer;
   DateTime _selectedDate = DateTime.now();
   DateTime _lastUpdated = DateTime.now();
+  var _animateIn = false;
 
   @override
   void initState() {
     super.initState();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _animateIn = true);
+    });
     _timer = Timer.periodic(const Duration(seconds: 12), (_) {
       if (!mounted) {
         return;
@@ -83,81 +88,138 @@ class _SupervisorDashboardPageState
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            summary.when(
-              data: (data) => Column(
+            AppCard(
+              gradient: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkGradient
+                  : AppColors.heroGradient,
+              borderColor: Colors.transparent,
+              child: Row(
                 children: [
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: MediaQuery.of(context).size.width >= 700
-                        ? 4
-                        : 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.2,
-                    children: [
-                      SummaryCard(
-                        title: 'Total Unit',
-                        value: data.totalUnits.toString(),
-                        icon: Icons.apartment_rounded,
-                      ),
-                      SummaryCard(
-                        title: 'Total Operator',
-                        value: data.totalOperators.toString(),
-                        icon: Icons.groups_rounded,
-                      ),
-                      SummaryCard(
-                        title: 'Laporan Hari Ini',
-                        value: data.todayReports.toString(),
-                        icon: Icons.receipt_long_rounded,
-                        tone: SummaryTone.success,
-                      ),
-                      SummaryCard(
-                        title: 'Laporan Abnormal',
-                        value: data.abnormalReports.toString(),
-                        icon: Icons.warning_amber_rounded,
-                        tone: SummaryTone.danger,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  AppCard(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SectionTitle(
-                          title: 'Status Monitoring',
-                          subtitle:
-                              'Ringkasan unit sudah submit, unit pending, dan operator terlambat',
+                        Text(
+                          'Supervisor Control Center',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            _StatusInfo(
-                              label: 'Unit sudah submit',
-                              value: data.successReports.toString(),
-                              color: Colors.green,
-                            ),
-                            _StatusInfo(
-                              label: 'Laporan pending',
-                              value: data.pendingSync.toString(),
-                              color: Colors.orange,
-                            ),
-                            _StatusInfo(
-                              label: 'Operator terlambat',
-                              value: data.lateOperators.toString(),
-                              color: Colors.red,
-                            ),
-                          ],
+                        const SizedBox(height: 6),
+                        Text(
+                          'Pantau laporan harian, anomali unit, dan status operator secara real-time.',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                    child: const Icon(
+                      Icons.insights_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            summary.when(
+              data: (data) => Column(
+                children: [
+                  _DashSection(
+                    index: 0,
+                    animateIn: _animateIn,
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: MediaQuery.of(context).size.width >= 700
+                          ? 4
+                          : 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      physics: const NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.2,
+                      children: [
+                        SummaryCard(
+                          title: 'Total Unit',
+                          value: data.totalUnits.toString(),
+                          icon: Icons.apartment_rounded,
+                        ),
+                        SummaryCard(
+                          title: 'Total Operator',
+                          value: data.totalOperators.toString(),
+                          icon: Icons.groups_rounded,
+                        ),
+                        SummaryCard(
+                          title: 'Laporan Hari Ini',
+                          value: data.todayReports.toString(),
+                          icon: Icons.receipt_long_rounded,
+                          tone: SummaryTone.success,
+                        ),
+                        SummaryCard(
+                          title: 'Laporan Abnormal',
+                          value: data.abnormalReports.toString(),
+                          icon: Icons.warning_amber_rounded,
+                          tone: SummaryTone.danger,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 18),
-                  AppCard(
-                    child: Column(
+                  _DashSection(
+                    index: 1,
+                    animateIn: _animateIn,
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle(
+                            title: 'Status Monitoring',
+                            subtitle:
+                                'Ringkasan unit sudah submit, unit pending, dan operator terlambat',
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _StatusInfo(
+                                label: 'Unit sudah submit',
+                                value: data.successReports.toString(),
+                                color: Colors.green,
+                              ),
+                              _StatusInfo(
+                                label: 'Laporan pending',
+                                value: data.pendingSync.toString(),
+                                color: Colors.orange,
+                              ),
+                              _StatusInfo(
+                                label: 'Operator terlambat',
+                                value: data.lateOperators.toString(),
+                                color: Colors.red,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _DashSection(
+                    index: 2,
+                    animateIn: _animateIn,
+                    child: AppCard(
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SectionTitle(
@@ -176,7 +238,7 @@ class _SupervisorDashboardPageState
                               lineBarsData: [
                                 LineChartBarData(
                                   isCurved: true,
-                                  color: Colors.cyan,
+                                  color: AppColors.accent,
                                   barWidth: 3,
                                   spots: const [
                                     FlSpot(0, 2.5),
@@ -205,7 +267,7 @@ class _SupervisorDashboardPageState
                                   barRods: [
                                     BarChartRodData(
                                       toY: (index + 2) * 2.0,
-                                      color: Colors.blue,
+                                      color: AppColors.primary,
                                     ),
                                   ],
                                 ),
@@ -223,17 +285,17 @@ class _SupervisorDashboardPageState
                               sections: [
                                 PieChartSectionData(
                                   value: data.successReports.toDouble(),
-                                  color: Colors.green,
+                                  color: AppColors.success,
                                   title: 'Sukses',
                                 ),
                                 PieChartSectionData(
                                   value: data.pendingSync.toDouble(),
-                                  color: Colors.orange,
+                                  color: AppColors.warning,
                                   title: 'Pending',
                                 ),
                                 PieChartSectionData(
                                   value: data.abnormalReports.toDouble(),
-                                  color: Colors.red,
+                                  color: AppColors.danger,
                                   title: 'Abnormal',
                                 ),
                               ],
@@ -242,6 +304,7 @@ class _SupervisorDashboardPageState
                         ),
                       ],
                     ),
+                  ),
                   ),
                 ],
               ),
@@ -256,6 +319,13 @@ class _SupervisorDashboardPageState
                   ChoiceChip(
                     label: const Text('Hari ini'),
                     selected: _isSameDate(_selectedDate, DateTime.now()),
+                    backgroundColor: Colors.white,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.14),
+                    side: BorderSide(
+                      color: _isSameDate(_selectedDate, DateTime.now())
+                          ? AppColors.primary.withValues(alpha: 0.42)
+                          : AppColors.border,
+                    ),
                     onSelected: (_) {
                       setState(() {
                         _selectedDate = DateTime.now();
@@ -267,6 +337,16 @@ class _SupervisorDashboardPageState
                     selected: _isSameDate(
                       _selectedDate,
                       DateTime.now().subtract(const Duration(days: 1)),
+                    ),
+                    backgroundColor: Colors.white,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.14),
+                    side: BorderSide(
+                      color: _isSameDate(
+                        _selectedDate,
+                        DateTime.now().subtract(const Duration(days: 1)),
+                      )
+                          ? AppColors.primary.withValues(alpha: 0.42)
+                          : AppColors.border,
                     ),
                     onSelected: (_) {
                       setState(() {
@@ -284,6 +364,17 @@ class _SupervisorDashboardPageState
                           _selectedDate,
                           DateTime.now().subtract(const Duration(days: 1)),
                         ),
+                    backgroundColor: Colors.white,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.14),
+                    side: BorderSide(
+                      color: (!_isSameDate(_selectedDate, DateTime.now()) &&
+                              !_isSameDate(
+                                _selectedDate,
+                                DateTime.now().subtract(const Duration(days: 1)),
+                              ))
+                          ? AppColors.primary.withValues(alpha: 0.42)
+                          : AppColors.border,
+                    ),
                     onSelected: (_) async {
                       final picked = await showDatePicker(
                         context: context,
@@ -322,6 +413,32 @@ class _SupervisorDashboardPageState
   }
 }
 
+class _DashSection extends StatelessWidget {
+  const _DashSection({
+    required this.index,
+    required this.animateIn,
+    required this.child,
+  });
+
+  final int index;
+  final bool animateIn;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSlide(
+      duration: Duration(milliseconds: 300 + (index * 90)),
+      curve: Curves.easeOutCubic,
+      offset: animateIn ? Offset.zero : const Offset(0, 0.08),
+      child: AnimatedOpacity(
+        duration: Duration(milliseconds: 260 + (index * 90)),
+        opacity: animateIn ? 1 : 0,
+        child: child,
+      ),
+    );
+  }
+}
+
 class _StatusInfo extends StatelessWidget {
   const _StatusInfo({
     required this.label,
@@ -339,7 +456,12 @@ class _StatusInfo extends StatelessWidget {
       width: 180,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.12),
+            Colors.white,
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),

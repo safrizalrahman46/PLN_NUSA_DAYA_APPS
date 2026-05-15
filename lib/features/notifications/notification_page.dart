@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_state.dart';
@@ -43,6 +44,7 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
             padding: const EdgeInsets.all(20),
             children: [
               AppCard(
+                gradient: AppColors.softSurfaceGradient,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -58,6 +60,15 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                             (item) => ChoiceChip(
                               label: Text(item),
                               selected: _priority == item,
+                              backgroundColor: Colors.white,
+                              selectedColor: AppColors.primary.withValues(
+                                alpha: 0.14,
+                              ),
+                              side: BorderSide(
+                                color: _priority == item
+                                    ? AppColors.primary.withValues(alpha: 0.42)
+                                    : AppColors.border,
+                              ),
                               onSelected: (_) {
                                 setState(() {
                                   _priority = item;

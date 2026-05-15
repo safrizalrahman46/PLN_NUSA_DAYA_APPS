@@ -131,17 +131,25 @@ class LogsheetDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
+          OverflowBar(
+            spacing: 10,
+            overflowSpacing: 10,
+            alignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
+              SizedBox(
+                width: MediaQuery.of(context).size.width < 380
+                    ? double.infinity
+                    : (MediaQuery.of(context).size.width - 50) / 2,
                 child: AppButton(
                   label: 'Download PDF',
                   onPressed: () =>
                       _snack(context, 'Download PDF dummy dijalankan.'),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
+              SizedBox(
+                width: MediaQuery.of(context).size.width < 380
+                    ? double.infinity
+                    : (MediaQuery.of(context).size.width - 50) / 2,
                 child: AppButton(
                   label: 'Share Report',
                   onPressed: () =>
@@ -175,6 +183,22 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final narrow = MediaQuery.of(context).size.width < 380;
+
+    if (narrow) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 4),
+            Text(value, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(

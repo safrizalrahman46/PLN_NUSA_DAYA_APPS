@@ -17,12 +17,16 @@ class NextReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final narrow = MediaQuery.of(context).size.width < 380;
+
     return AppCard(
       gradient: LinearGradient(
         colors: [
-          AppColors.primary.withValues(alpha: 0.96),
+          AppColors.primary.withValues(alpha: 0.98),
           AppColors.primaryDark,
         ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
       borderColor: Colors.transparent,
       child: Column(
@@ -39,14 +43,37 @@ class NextReportCard extends StatelessWidget {
             DateHelper.formatDateTime(nextReportAt),
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(color: Colors.white),
+            ).textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 18),
-          Row(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              'Interval pelaporan 1 jam',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          OverflowBar(
+            spacing: 12,
+            overflowSpacing: 12,
+            alignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
+              SizedBox(
+                width: narrow ? double.infinity : null,
                 child: Text(
                   countdownText,
+                  textAlign: narrow ? TextAlign.center : TextAlign.start,
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -54,7 +81,7 @@ class NextReportCard extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 130,
+                width: narrow ? double.infinity : 130,
                 child: AppButton(
                   label: 'Siap Input',
                   onPressed: () {},

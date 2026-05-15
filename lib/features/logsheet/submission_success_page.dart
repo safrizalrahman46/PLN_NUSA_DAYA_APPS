@@ -33,6 +33,8 @@ class SubmissionSuccessPage extends StatelessWidget {
         ? unitMachines[currentMachineIndex + 1]
         : null;
 
+    final narrow = MediaQuery.of(context).size.width < 420;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Bukti Pengiriman')),
       body: ListView(
@@ -70,25 +72,40 @@ class SubmissionSuccessPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Lat ${logsheet.latitude.toStringAsFixed(6)} | Lng ${logsheet.longitude.toStringAsFixed(6)}',
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Thumb(
-                        path: logsheet.selfiePhotoPath,
-                        label: 'Selfie',
+                narrow
+                    ? Column(
+                        children: [
+                          _Thumb(
+                            path: logsheet.selfiePhotoPath,
+                            label: 'Selfie',
+                          ),
+                          const SizedBox(height: 12),
+                          _Thumb(
+                            path: logsheet.machinePhotoPath,
+                            label: 'Mesin',
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: _Thumb(
+                              path: logsheet.selfiePhotoPath,
+                              label: 'Selfie',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _Thumb(
+                              path: logsheet.machinePhotoPath,
+                              label: 'Mesin',
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _Thumb(
-                        path: logsheet.machinePhotoPath,
-                        label: 'Mesin',
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),

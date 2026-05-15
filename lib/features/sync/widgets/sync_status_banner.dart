@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
 import '../sync_service.dart';
 
@@ -10,10 +11,35 @@ class SyncStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final syncing = state.isSyncing;
+
     return AppCard(
+      gradient: LinearGradient(
+        colors: [
+          (syncing ? AppColors.primary : AppColors.success).withValues(
+            alpha: 0.14,
+          ),
+          Colors.white,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
       child: Row(
         children: [
-          Icon(state.isSyncing ? Icons.sync_rounded : Icons.cloud_done_rounded),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: syncing
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : AppColors.success.withValues(alpha: 0.14),
+            ),
+            child: Icon(
+              syncing ? Icons.sync_rounded : Icons.cloud_done_rounded,
+              color: syncing ? AppColors.primary : AppColors.success,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

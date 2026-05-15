@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
@@ -26,8 +27,10 @@ class OperatorStatusCard extends StatelessWidget {
     final lastSubmit = rawSubmit is DateTime
         ? rawSubmit
         : DateTime.tryParse(rawSubmit?.toString() ?? '');
+    final hasPhoto = item['hasPhoto'] == true;
 
     return AppCard(
+      gradient: AppColors.softSurfaceGradient,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -40,17 +43,32 @@ class OperatorStatusCard extends StatelessWidget {
                 ),
               ),
               Icon(
-                item['hasPhoto'] == true
+                hasPhoto
                     ? Icons.photo_camera_front_rounded
                     : Icons.no_photography_rounded,
-                color: item['hasPhoto'] == true ? Colors.green : Colors.orange,
+                color: hasPhoto ? Colors.green : Colors.orange,
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('Operator: ${item['operator']}'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Operator: ${item['operator']}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
           Text(
             'Jam submit terakhir: ${lastSubmit == null ? '-' : DateHelper.formatDateTime(lastSubmit)}',
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -60,10 +78,8 @@ class OperatorStatusCard extends StatelessWidget {
               StatusBadge.report(reportStatus),
               StatusBadge.location(locationStatus),
               StatusBadge(
-                label: item['hasPhoto'] == true
-                    ? 'Foto tersedia'
-                    : 'Foto belum lengkap',
-                color: item['hasPhoto'] == true ? Colors.green : Colors.orange,
+                label: hasPhoto ? 'Foto tersedia' : 'Foto belum lengkap',
+                color: hasPhoto ? Colors.green : Colors.orange,
               ),
             ],
           ),

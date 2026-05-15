@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../data/models/app_enums.dart';
 import '../auth/auth_controller.dart';
 import '../notifications/notification_page.dart';
@@ -63,6 +64,8 @@ class _SupervisorShellPageState extends ConsumerState<SupervisorShellPage> {
               selectedIndex: safeIndex,
               onDestinationSelected: (value) => setState(() => _index = value),
               labelType: NavigationRailLabelType.all,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              indicatorColor: AppColors.primary.withValues(alpha: 0.16),
               leading: Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
@@ -79,14 +82,52 @@ class _SupervisorShellPageState extends ConsumerState<SupervisorShellPage> {
                   )
                   .toList(),
             ),
-            Expanded(child: items[safeIndex].page),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeOut,
+                transitionBuilder: (child, animation) {
+                  final offset = Tween<Offset>(
+                    begin: const Offset(0.03, 0),
+                    end: Offset.zero,
+                  ).animate(animation);
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(position: offset, child: child),
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey(safeIndex),
+                  child: items[safeIndex].page,
+                ),
+              ),
+            ),
           ],
         ),
       );
     }
 
     return Scaffold(
-      body: items[safeIndex].page,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeOut,
+        transitionBuilder: (child, animation) {
+          final offset = Tween<Offset>(
+            begin: const Offset(0.03, 0),
+            end: Offset.zero,
+          ).animate(animation);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: offset, child: child),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(safeIndex),
+          child: items[safeIndex].page,
+        ),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: safeIndex,
         onDestinationSelected: (value) => setState(() => _index = value),

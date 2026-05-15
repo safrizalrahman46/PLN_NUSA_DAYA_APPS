@@ -22,9 +22,22 @@ class GpsValidationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Status lokasi', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Status lokasi realtime',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 12),
-          StatusBadge.location(result.status),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StatusBadge.location(result.status),
+              StatusBadge(
+                label: result.gpsEnabled ? 'GPS aktif' : 'GPS nonaktif',
+                color: result.gpsEnabled ? Colors.green : Colors.red,
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
           _Row(label: 'Latitude', value: result.latitude.toStringAsFixed(6)),
           _Row(label: 'Longitude', value: result.longitude.toStringAsFixed(6)),
@@ -40,6 +53,15 @@ class GpsValidationCard extends StatelessWidget {
             label: 'Radius maksimal',
             value: DistanceHelper.format(unit.radiusMeter),
           ),
+          _Row(label: 'Nama jalan', value: result.street),
+          _Row(
+            label: 'Area',
+            value: result.subLocality == '-'
+                ? result.locality
+                : '${result.subLocality}, ${result.locality}',
+          ),
+          _Row(label: 'Provinsi', value: result.administrativeArea),
+          _Row(label: 'Alamat lengkap', value: result.fullAddress),
           _Row(label: 'Lokasi unit', value: unit.locationName),
         ],
       ),
@@ -55,9 +77,25 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final narrow = MediaQuery.of(context).size.width < 380;
+    if (narrow) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 4),
+            Text(value, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(width: 150, child: Text(label)),
           Expanded(

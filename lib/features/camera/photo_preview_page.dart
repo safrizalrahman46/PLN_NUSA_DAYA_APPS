@@ -81,17 +81,25 @@ class PhotoPreviewPage extends StatelessWidget {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: OverflowBar(
+                spacing: 12,
+                overflowSpacing: 12,
+                alignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width < 380
+                        ? double.infinity
+                        : (MediaQuery.of(context).size.width - 56) / 2,
                     child: AppButton(
                       label: 'Ambil Ulang',
                       onPressed: () => Navigator.pop(context),
                       type: AppButtonType.outlined,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width < 380
+                        ? double.infinity
+                        : (MediaQuery.of(context).size.width - 56) / 2,
                     child: AppButton(
                       label: 'Gunakan Foto',
                       onPressed: () => Navigator.pop(context, imagePath),

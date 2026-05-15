@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../data/models/logsheet_model.dart';
@@ -49,30 +52,63 @@ class PendingUploadPage extends ConsumerWidget {
             pending.when(
               data: (items) => Column(
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton.icon(
-                      onPressed: syncState.isSyncing
-                          ? null
-                          : () => ref
-                                .read(syncServiceProvider.notifier)
-                                .syncPending(),
-                      icon: const Icon(Icons.sync_rounded),
-                      label: Text('Sync Semua (${items.length})'),
+                  AppCard(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.08),
+                        Colors.white,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Antrian Upload',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${items.length} laporan menunggu sinkronisasi.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                        FilledButton.icon(
+                          onPressed: syncState.isSyncing
+                              ? null
+                              : () => ref
+                                    .read(syncServiceProvider.notifier)
+                                    .syncPending(),
+                          icon: const Icon(Icons.sync_rounded),
+                          label: Text('Sync (${items.length})'),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ...items.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: PendingUploadCard(
-                        logsheet: item,
-                        onSync: () => ref
-                            .read(syncServiceProvider.notifier)
-                            .syncPending(),
+                  if (items.isEmpty)
+                    const AppEmptyState(
+                      title: 'Tidak ada antrian',
+                      message:
+                          'Semua laporan sudah tersinkron. Input laporan baru untuk mengisi antrian.',
+                      icon: Icons.cloud_done_rounded,
+                    )
+                  else
+                    ...items.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: PendingUploadCard(
+                          logsheet: item,
+                          onSync: () => ref
+                              .read(syncServiceProvider.notifier)
+                              .syncPending(),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               loading: () => const AppLoading(),

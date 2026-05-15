@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
@@ -94,6 +96,31 @@ class _OperatorMonitoringPageState
                   onUnitChanged: (value) => setState(() => _unit = value),
                 ),
                 const SizedBox(height: 16),
+                AppCard(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.1),
+                      Colors.white,
+                    ],
+                  ),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _QuickChip(
+                        icon: Icons.groups_rounded,
+                        text: 'Operator ${filtered.length}',
+                      ),
+                      _QuickChip(icon: Icons.fact_check_rounded, text: _status),
+                      _QuickChip(icon: Icons.apartment_rounded, text: _unit),
+                      _QuickChip(
+                        icon: Icons.calendar_today_rounded,
+                        text: _selectedDate == null ? 'Semua tanggal' : '1 hari',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 if (filtered.isEmpty)
                   const AppEmptyState(
                     title: 'Monitoring kosong',
@@ -128,6 +155,39 @@ class _OperatorMonitoringPageState
           loading: () => const AppLoading(),
           error: (error, _) => AppErrorState(message: error.toString()),
         ),
+      ),
+    );
+  }
+}
+
+class _QuickChip extends StatelessWidget {
+  const _QuickChip({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.text,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

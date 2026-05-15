@@ -18,7 +18,17 @@ class ParameterInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crossAxisCount = MediaQuery.of(context).size.width >= 700 ? 3 : 2;
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width >= 700
+        ? 3
+        : width < 380
+        ? 1
+        : 2;
+    final childAspectRatio = width < 380
+        ? 4.4
+        : width < 700
+        ? 2.5
+        : 2.8;
 
     return AppCard(
       child: Column(
@@ -37,7 +47,7 @@ class ParameterInputSection extends StatelessWidget {
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 2.3,
+              childAspectRatio: childAspectRatio,
             ),
             itemBuilder: (_, index) {
               final field = fields[index];

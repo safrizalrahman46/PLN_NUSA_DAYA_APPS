@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
@@ -112,6 +114,39 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   onUnitChanged: (value) => setState(() => _unitFilter = value),
                 ),
                 const SizedBox(height: 16),
+                AppCard(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.1),
+                      Colors.white,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _MiniInfoChip(
+                        icon: Icons.filter_alt_rounded,
+                        label: 'Hasil ${filtered.length}',
+                      ),
+                      _MiniInfoChip(
+                        icon: Icons.sync_rounded,
+                        label: _syncFilter,
+                      ),
+                      _MiniInfoChip(
+                        icon: Icons.location_on_rounded,
+                        label: _locationFilter,
+                      ),
+                      _MiniInfoChip(
+                        icon: Icons.calendar_month_rounded,
+                        label: _selectedDate == null ? 'Semua tanggal' : '1 hari',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
                 if (filtered.isEmpty)
                   const AppEmptyState(
                     title: 'Data tidak ditemukan',
@@ -144,6 +179,39 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           error: (error, _) =>
               AppErrorState(message: error.toString(), onRetry: _refresh),
         ),
+      ),
+    );
+  }
+}
+
+class _MiniInfoChip extends StatelessWidget {
+  const _MiniInfoChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: Colors.white,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.text,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
@@ -64,6 +65,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
             padding: const EdgeInsets.all(20),
             children: [
               AppCard(
+                gradient: AppColors.softSurfaceGradient,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -79,6 +81,15 @@ class _ReportPageState extends ConsumerState<ReportPage> {
                             (item) => ChoiceChip(
                               label: Text(item),
                               selected: _period == item,
+                              backgroundColor: Colors.white,
+                              selectedColor: AppColors.primary.withValues(
+                                alpha: 0.14,
+                              ),
+                              side: BorderSide(
+                                color: _period == item
+                                    ? AppColors.primary.withValues(alpha: 0.42)
+                                    : AppColors.border,
+                              ),
                               onSelected: (_) {
                                 setState(() {
                                   _period = item;
@@ -111,27 +122,42 @@ class _ReportPageState extends ConsumerState<ReportPage> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.calendar_month_rounded),
-                      title: Text(
-                        'Tanggal rekap: ${_selectedDate.day.toString().padLeft(2, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.year}',
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
                       ),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedDate,
-                            firstDate: DateTime(2024),
-                            lastDate: DateTime(2030),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              _selectedDate = picked;
-                            });
-                          }
-                        },
-                        child: const Text('Ubah'),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_month_rounded),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Tanggal rekap: ${_selectedDate.day.toString().padLeft(2, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.year}',
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDate,
+                                firstDate: DateTime(2024),
+                                lastDate: DateTime(2030),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _selectedDate = picked;
+                                });
+                              }
+                            },
+                            child: const Text('Ubah'),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -233,6 +259,7 @@ class _MiniInfo extends StatelessWidget {
       width: 160,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
+        gradient: AppColors.softSurfaceGradient,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),

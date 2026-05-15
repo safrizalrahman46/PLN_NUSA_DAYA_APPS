@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
 
@@ -32,22 +33,48 @@ class HistoryFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      gradient: AppColors.softSurfaceGradient,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Filter Riwayat',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Cari data logsheet berdasarkan waktu, unit, dan status.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 14),
           AppTextField(
             label: 'Cari proof ID / unit / serial number',
             onChanged: onSearchChanged,
             suffixIcon: const Icon(Icons.search_rounded),
           ),
           const SizedBox(height: 12),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.calendar_month_rounded),
-            title: Text('Filter tanggal: $selectedDateLabel'),
-            trailing: TextButton(
-              onPressed: onPickDate,
-              child: const Text('Ubah'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.white,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month_rounded),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Filter tanggal: $selectedDateLabel',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+                TextButton(
+                  onPressed: onPickDate,
+                  child: const Text('Ubah'),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 14),
@@ -113,6 +140,13 @@ class _FilterWrap extends StatelessWidget {
                     child: ChoiceChip(
                       label: Text(option),
                       selected: option == selected,
+                      backgroundColor: Colors.white,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.14),
+                      side: BorderSide(
+                        color: option == selected
+                            ? AppColors.primary.withValues(alpha: 0.42)
+                            : AppColors.border,
+                      ),
                       onSelected: (_) {
                         onSelected(option);
                       },

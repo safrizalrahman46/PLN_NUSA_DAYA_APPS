@@ -36,7 +36,16 @@ class AppCard extends StatelessWidget {
           color:
               borderColor ?? (isDark ? AppColors.darkBorder : AppColors.border),
         ),
-        boxShadow: isDark ? const [] : [TextStyles.softShadow],
+        boxShadow: isDark
+            ? const []
+            : [
+                TextStyles.softShadow,
+                const BoxShadow(
+                  color: Color(0x0F0D2A52),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
       ),
       child: child,
     );
