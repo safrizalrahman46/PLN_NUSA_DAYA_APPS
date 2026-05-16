@@ -4,10 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/widgets/app_brand_logo.dart';
-import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_shimmer.dart';
-import '../../core/widgets/glass_card.dart';
 import '../../data/dummy/dummy_data.dart';
 import '../../data/models/app_enums.dart';
 import '../../data/models/user_model.dart';
@@ -22,19 +18,33 @@ class LoginPage extends ConsumerStatefulWidget {
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController(text: 'operator');
   final _passwordController = TextEditingController(text: '123');
   var _obscurePassword = true;
-  var _loadingHero = true;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) setState(() => _loadingHero = false);
-    });
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   Future<void> _submit() async {
@@ -62,226 +72,339 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
-        child: Stack(
-          children: [
-            // Aurora orbs
-            Positioned(
-              left: -80,
-              top: -20,
-              child: Container(
-                width: 240,
-                height: 240,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.auroraBlue.withValues(alpha: 0.32),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // ── Top gradient header (≈42% screen height) ──────────────────
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: size.height * 0.42,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: AppColors.splashGradient,
               ),
-            ),
-            Positioned(
-              right: -60,
-              top: 100,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.auroraCyan.withValues(alpha: 0.22),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: -30,
-              bottom: 60,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.auroraViolet.withValues(alpha: 0.18),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Stack(
                 children: [
-                  _loadingHero
-                      ? AppShimmer(child: const SizedBox(height: 220))
-                      : const LoginHeader(),
-                  const SizedBox(height: 22),
-                  GlassCard(
-                    padding: const EdgeInsets.all(20),
-                    borderRadius: 28,
-                    sigmaX: 14,
-                    sigmaY: 14,
-                    borderColor: Colors.white.withValues(alpha: 0.25),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // Aurora orbs (subtle, top area only)
+                  AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (_, __) => Stack(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Masuk ke sistem',
-                                    style:
-                                        Theme.of(context).textTheme.titleLarge,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Gunakan akun demo operator/supervisor/admin/superadmin, password: 123.',
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 44,
-                              height: 44,
+                        Positioned(
+                          left: -80,
+                          top: -60,
+                          child: Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: Container(
+                              width: 260,
+                              height: 260,
                               decoration: BoxDecoration(
-                                gradient: AppColors.sunsetGlow,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              padding: const EdgeInsets.all(8),
-                              child: const AppBrandLogo.mark(width: 28),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        if (authState.errorMessage != null) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.red.withValues(alpha: 0.24),
-                              ),
-                            ),
-                            child: Text(
-                              authState.errorMessage!,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppColors.danger),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        LoginForm(
-                          formKey: _formKey,
-                          usernameController: _usernameController,
-                          passwordController: _passwordController,
-                          obscurePassword: _obscurePassword,
-                          onTogglePassword: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                          rememberMe: authState.rememberMe,
-                          onRememberChanged: (value) => ref
-                              .read(authControllerProvider.notifier)
-                              .toggleRememberMe(value),
-                          isLoading: authState.isLoading,
-                          onSubmit: _submit,
-                          onForgotPassword: () => Navigator.pushNamed(
-                            context,
-                            AppRoutes.forgotPassword,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        GlassCard(
-                          padding: const EdgeInsets.all(14),
-                          borderRadius: 16,
-                          sigmaX: 8,
-                          sigmaY: 8,
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.security_rounded,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Login aman untuk operator & supervisor PLTD.',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        const Divider(height: 1),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Login cepat akun demo',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 10),
-                        ...DummyData.users
-                            .where(
-                              (user) =>
-                                  user.username == 'operator' ||
-                                  user.username == 'supervisor' ||
-                                  user.username == 'admin' ||
-                                  user.username == 'superadmin',
-                            )
-                            .map(
-                              (user) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: _DemoAccountTile(
-                                  user: user,
-                                  onUseAccount: () => _quickLogin(user),
-                                  onFillOnly: () {
-                                    _usernameController.text = user.username;
-                                    _passwordController.text = '123';
-                                    setState(() {});
-                                  },
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    AppColors.auroraCyan.withValues(alpha: 0.22),
+                                    Colors.transparent,
+                                  ],
                                 ),
                               ),
                             ),
+                          ),
+                        ),
+                        Positioned(
+                          right: -60,
+                          top: 30,
+                          child: Transform.scale(
+                            scale: 1.1 - (_pulseAnimation.value * 0.1),
+                            child: Container(
+                              width: 200,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    AppColors.auroraViolet.withValues(alpha: 0.20),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    AppStrings.appVersion,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // ── White bottom sheet (overlaps header, rounded top) ──────────
+          Positioned(
+            top: size.height * 0.34,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Scrollable content ─────────────────────────────────────────
+          SafeArea(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                // Header / branding inside the blue area
+                SizedBox(
+                  height: size.height * 0.34,
+                  child: const Center(child: LoginHeader()),
+                ),
+
+                // White card area starts here
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Error banner
+                      if (authState.errorMessage != null) ...[
+                        _ErrorBanner(message: authState.errorMessage!),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Login form
+                      LoginForm(
+                        formKey: _formKey,
+                        usernameController: _usernameController,
+                        passwordController: _passwordController,
+                        obscurePassword: _obscurePassword,
+                        onTogglePassword: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                        rememberMe: authState.rememberMe,
+                        onRememberChanged: (v) => ref.read(authControllerProvider.notifier).toggleRememberMe(v),
+                        isLoading: authState.isLoading,
+                        onSubmit: _submit,
+                        onForgotPassword: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.forgotPassword,
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Divider "or"
+                      Row(
+                        children: [
+                          const Expanded(child: Divider(color: AppColors.border)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'Atau gunakan akun demo',
+                              style:
+                                  Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSoft,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const Expanded(child: Divider(color: AppColors.border)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Demo accounts section
+                      _DemoAccountsSection(
+                        onUse: _quickLogin,
+                        onFill: (user) {
+                          _usernameController.text = user.username;
+                          _passwordController.text = '123';
+                          setState(() {});
+                        },
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Footer
+                      Text(
+                        AppStrings.appVersion,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSoft,
+                              letterSpacing: 0.5,
+                            ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _DemoAccountTile extends StatelessWidget {
+// ─────────────────────────────────────────────
+// Error banner
+// ─────────────────────────────────────────────
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.danger,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Demo accounts section
+// ─────────────────────────────────────────────
+class _DemoAccountsSection extends StatelessWidget {
+  const _DemoAccountsSection({
+    required this.onUse,
+    required this.onFill,
+  });
+
+  final void Function(UserModel) onUse;
+  final void Function(UserModel) onFill;
+
+  @override
+  Widget build(BuildContext context) {
+    final demoUsers = DummyData.users.where(
+      (u) => ['operator', 'supervisor', 'admin', 'superadmin']
+          .contains(u.username),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSoft,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.people_alt_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Akun Demo',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    Text(
+                      'Password semua akun: 123',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            color: AppColors.border,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Accounts list
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              children: demoUsers.map((user) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _DemoAccountTile(
+                    user: user,
+                    onUseAccount: () => onUse(user),
+                    onFillOnly: () => onFill(user),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Demo account tile (redesigned)
+// ─────────────────────────────────────────────
+class _DemoAccountTile extends StatefulWidget {
   const _DemoAccountTile({
     required this.user,
     required this.onUseAccount,
@@ -293,102 +416,278 @@ class _DemoAccountTile extends StatelessWidget {
   final VoidCallback onFillOnly;
 
   @override
-  Widget build(BuildContext context) {
-    final color = switch (user.role.name) {
-      'operator' => Colors.green,
-      'supervisor' => Colors.blue,
-      'admin' => Colors.orange,
-      'superadmin' => Colors.red,
-      _ => AppColors.primary,
-    };
+  State<_DemoAccountTile> createState() => _DemoAccountTileState();
+}
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: 0.08),
-            Colors.white,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+class _DemoAccountTileState extends State<_DemoAccountTile> {
+  bool _hovered = false;
+
+  static const _roleConfig = {
+    'operator': (
+      color: Color(0xFF10B981),
+      icon: Icons.engineering_rounded,
+      label: 'Operator',
+      gradientEnd: Color(0xFFD1FAE5),
+    ),
+    'supervisor': (
+      color: Color(0xFF3B82F6),
+      icon: Icons.supervisor_account_rounded,
+      label: 'Supervisor',
+      gradientEnd: Color(0xFFDBEAFE),
+    ),
+    'admin': (
+      color: Color(0xFFF59E0B),
+      icon: Icons.admin_panel_settings_rounded,
+      label: 'Admin',
+      gradientEnd: Color(0xFFFEF3C7),
+    ),
+    'superadmin': (
+      color: Color(0xFFEF4444),
+      icon: Icons.security_rounded,
+      label: 'Super Admin',
+      gradientEnd: Color(0xFFFEE2E2),
+    ),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final cfg = _roleConfig[widget.user.role.name] ??
+        (
+          color: AppColors.primary,
+          icon: Icons.person_rounded,
+          label: widget.user.role.label,
+          gradientEnd: Colors.white,
+        );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [
+              cfg.color.withValues(alpha: _hovered ? 0.12 : 0.07),
+              cfg.gradientEnd.withValues(alpha: _hovered ? 0.9 : 0.6),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: cfg.color.withValues(alpha: _hovered ? 0.35 : 0.18),
+            width: _hovered ? 1.5 : 1.0,
+          ),
+          boxShadow: _hovered
+              ? [
+                  BoxShadow(
+                    color: cfg.color.withValues(alpha: 0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: color.withValues(alpha: 0.18),
-                child: Icon(Icons.person_rounded, color: color, size: 18),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      user.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    // Avatar
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            cfg.color.withValues(alpha: 0.25),
+                            cfg.color.withValues(alpha: 0.12),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: cfg.color.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(cfg.icon, color: cfg.color, size: 20),
                     ),
-                    Text(
-                      '${user.role.label} • ${user.username}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSoft,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.user.name,
+                            style:
+                                Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.1,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '@${widget.user.username}',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSoft,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Role badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color: cfg.color.withValues(alpha: 0.13),
+                        border: Border.all(
+                          color: cfg.color.withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        cfg.label,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cfg.color,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: color.withValues(alpha: 0.12),
+
+                const SizedBox(height: 12),
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: _TileButton(
+                        label: 'Isi Form',
+                        icon: Icons.edit_rounded,
+                        color: cfg.color,
+                        outlined: true,
+                        onPressed: widget.onFillOnly,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _TileButton(
+                        label: 'Login',
+                        icon: Icons.login_rounded,
+                        color: cfg.color,
+                        outlined: false,
+                        onPressed: widget.onUseAccount,
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  user.role.label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          OverflowBar(
-            spacing: 10,
-            overflowSpacing: 10,
-            alignment: MainAxisAlignment.spaceBetween,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tile action button
+// ─────────────────────────────────────────────
+class _TileButton extends StatefulWidget {
+  const _TileButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.outlined,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool outlined;
+  final VoidCallback onPressed;
+
+  @override
+  State<_TileButton> createState() => _TileButtonState();
+}
+
+class _TileButtonState extends State<_TileButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onPressed();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          height: 38,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: widget.outlined
+                ? Colors.white.withValues(alpha: 0.6)
+                : widget.color,
+            border: Border.all(
+              color: widget.outlined
+                  ? widget.color.withValues(alpha: 0.35)
+                  : widget.color,
+              width: 1.5,
+            ),
+            boxShadow: widget.outlined
+                ? null
+                : [
+                    BoxShadow(
+                      color: widget.color.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width < 380
-                    ? double.infinity
-                    : (MediaQuery.of(context).size.width - 86) / 2,
-                child: AppButton(
-                  label: 'Isi Akun',
-                  onPressed: onFillOnly,
-                  type: AppButtonType.outlined,
-                ),
+              Icon(
+                widget.icon,
+                size: 14,
+                color: widget.outlined ? widget.color : Colors.white,
               ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width < 380
-                    ? double.infinity
-                    : (MediaQuery.of(context).size.width - 86) / 2,
-                child: AppButton(
-                  label: 'Login Sekarang',
-                  onPressed: onUseAccount,
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: widget.outlined ? widget.color : Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

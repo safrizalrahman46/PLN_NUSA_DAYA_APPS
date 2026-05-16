@@ -35,7 +35,29 @@ class LoginForm extends StatelessWidget {
     return Form(
       key: formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // "Welcome Back" heading inside the form card (like Jobsly)
+          Text(
+            'Selamat Datang',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Masukkan detail akun Anda di bawah ini',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSoft,
+                ),
+          ),
+          const SizedBox(height: 28),
+
+          // Username field
+          _FieldLabel(label: 'Username / NIK'),
+          const SizedBox(height: 6),
           AppTextField(
             controller: usernameController,
             label: 'Username / NIK',
@@ -43,7 +65,11 @@ class LoginForm extends StatelessWidget {
                 ? 'Username wajib diisi'
                 : null,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
+
+          // Password field
+          _FieldLabel(label: 'Password'),
+          const SizedBox(height: 6),
           AppTextField(
             controller: passwordController,
             label: 'Password',
@@ -54,6 +80,7 @@ class LoginForm extends StatelessWidget {
                 obscurePassword
                     ? Icons.visibility_off_rounded
                     : Icons.visibility_rounded,
+                color: AppColors.textSoft,
               ),
             ),
             validator: (value) {
@@ -66,33 +93,74 @@ class LoginForm extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 10),
+
+          // Remember me + forgot password row
+          const SizedBox(height: 8),
           Row(
             children: [
-              Checkbox(
-                value: rememberMe,
-                onChanged: (value) {
-                  onRememberChanged(value ?? false);
-                },
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Checkbox(
+                  value: rememberMe,
+                  onChanged: (value) => onRememberChanged(value ?? false),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  activeColor: AppColors.primary,
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 'Ingat saya',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.text,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
               const Spacer(),
               TextButton(
                 onPressed: onForgotPassword,
-                child: const Text('Lupa password'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Lupa password?',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          AppButton(label: 'Login', onPressed: onSubmit, isLoading: isLoading),
+
+          const SizedBox(height: 24),
+
+          // Login button — full width gradient like Jobsly
+          AppButton(label: 'Masuk', onPressed: onSubmit, isLoading: isLoading),
         ],
       ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textSoft,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
     );
   }
 }
