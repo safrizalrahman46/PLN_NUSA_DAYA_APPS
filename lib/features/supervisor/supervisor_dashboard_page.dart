@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_helper.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../core/widgets/section_title.dart';
@@ -86,9 +86,10 @@ class _SupervisorDashboardPageState
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.fromLTRB(
+              20, 20, 20, MediaQuery.of(context).padding.bottom + 108),
           children: [
-            AppCard(
+            GlassCard(
               gradient: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.darkGradient
                   : AppColors.heroGradient,
@@ -179,7 +180,7 @@ class _SupervisorDashboardPageState
                   _DashSection(
                     index: 1,
                     animateIn: _animateIn,
-                    child: AppCard(
+                    child: GlassCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -218,7 +219,7 @@ class _SupervisorDashboardPageState
                   _DashSection(
                     index: 2,
                     animateIn: _animateIn,
-                    child: AppCard(
+                    child: GlassCard(
                       child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -312,7 +313,7 @@ class _SupervisorDashboardPageState
               error: (error, _) => AppErrorState(message: error.toString()),
             ),
             const SizedBox(height: 18),
-            AppCard(
+            GlassCard(
               child: Wrap(
                 spacing: 8,
                 children: [

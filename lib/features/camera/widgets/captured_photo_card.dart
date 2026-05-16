@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
+
 class CapturedPhotoCard extends StatelessWidget {
   const CapturedPhotoCard({super.key, required this.path});
 
@@ -15,9 +17,37 @@ class CapturedPhotoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: path == null
             ? Container(
-                color: Colors.black12,
-                child: const Center(
-                  child: Icon(Icons.image_outlined, size: 42),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.08),
+                      AppColors.accent.withValues(alpha: 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_a_photo_rounded,
+                        size: 46,
+                        color: AppColors.primary.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Belum ada foto',
+                        style: TextStyle(
+                          color: AppColors.textSoft,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             : Image.file(File(path!), fit: BoxFit.cover),

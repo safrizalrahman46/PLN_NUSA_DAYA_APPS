@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../data/models/app_enums.dart';
@@ -86,7 +86,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             }).toList();
 
             return ListView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(
+                  20, 20, 20, MediaQuery.of(context).padding.bottom + 108),
               children: [
                 HistoryFilterBar(
                   onSearchChanged: (value) => setState(() => _query = value),
@@ -114,11 +115,11 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   onUnitChanged: (value) => setState(() => _unitFilter = value),
                 ),
                 const SizedBox(height: 16),
-                AppCard(
+                GlassCard(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.primary.withValues(alpha: 0.1),
-                      Colors.white,
+                      AppColors.primary.withValues(alpha: 0.12),
+                      Colors.transparent,
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

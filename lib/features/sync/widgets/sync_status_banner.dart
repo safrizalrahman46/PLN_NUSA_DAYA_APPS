@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../sync_service.dart';
 
 class SyncStatusBanner extends StatelessWidget {
@@ -13,17 +13,20 @@ class SyncStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final syncing = state.isSyncing;
 
-    return AppCard(
+    return GlassCard(
       gradient: LinearGradient(
         colors: [
           (syncing ? AppColors.primary : AppColors.success).withValues(
-            alpha: 0.14,
+            alpha: 0.16,
           ),
-          Colors.white,
+          Colors.transparent,
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
+      borderColor: syncing
+          ? AppColors.primary.withValues(alpha: 0.3)
+          : AppColors.success.withValues(alpha: 0.3),
       child: Row(
         children: [
           Container(

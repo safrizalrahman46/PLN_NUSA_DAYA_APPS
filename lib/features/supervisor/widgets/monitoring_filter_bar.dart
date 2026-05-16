@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 
 class MonitoringFilterBar extends StatelessWidget {
   const MonitoringFilterBar({
@@ -28,8 +28,7 @@ class MonitoringFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      gradient: AppColors.softSurfaceGradient,
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -46,16 +45,14 @@ class MonitoringFilterBar extends StatelessWidget {
             suffixIcon: const Icon(Icons.search_rounded),
           ),
           const SizedBox(height: 12),
-          Container(
+          GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
+            borderRadius: 16,
+            sigmaX: 6,
+            sigmaY: 6,
             child: Row(
               children: [
-                const Icon(Icons.calendar_month_rounded),
+                const Icon(Icons.calendar_month_rounded, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

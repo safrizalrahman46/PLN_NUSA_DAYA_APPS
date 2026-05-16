@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 
 class NotificationCard extends StatelessWidget {
   const NotificationCard({super.key, required this.item});
@@ -31,15 +31,23 @@ class NotificationCard extends StatelessWidget {
       _ => Icons.notifications_active_rounded,
     };
 
-    return AppCard(
-      gradient: AppColors.softSurfaceGradient,
-      borderColor: isRead ? null : color.withValues(alpha: 0.3),
+    return GlassCard(
+      borderColor: isRead ? null : color.withValues(alpha: 0.35),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            backgroundColor: color.withValues(alpha: 0.14),
-            child: Icon(icon, color: color),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withValues(alpha: 0.6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(

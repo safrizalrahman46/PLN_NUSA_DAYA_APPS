@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../data/models/unit_model.dart';
 import '../location_service.dart';
 
@@ -31,7 +31,8 @@ class GpsMapPlaceholder extends StatelessWidget {
     );
     final mapController = MapController();
 
-    return AppCard(
+    return GlassCard(
+      padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: SizedBox(

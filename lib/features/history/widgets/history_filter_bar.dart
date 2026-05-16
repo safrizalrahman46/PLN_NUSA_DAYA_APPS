@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 
 class HistoryFilterBar extends StatelessWidget {
   const HistoryFilterBar({
@@ -32,8 +32,7 @@ class HistoryFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      gradient: AppColors.softSurfaceGradient,
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -53,16 +52,14 @@ class HistoryFilterBar extends StatelessWidget {
             suffixIcon: const Icon(Icons.search_rounded),
           ),
           const SizedBox(height: 12),
-          Container(
+          GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.white,
-              border: Border.all(color: AppColors.border),
-            ),
+            borderRadius: 16,
+            sigmaX: 6,
+            sigmaY: 6,
             child: Row(
               children: [
-                const Icon(Icons.calendar_month_rounded),
+                const Icon(Icons.calendar_month_rounded, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

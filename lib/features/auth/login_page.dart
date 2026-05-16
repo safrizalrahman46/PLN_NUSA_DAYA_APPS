@@ -5,9 +5,9 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/widgets/app_brand_logo.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_shimmer.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../data/dummy/dummy_data.dart';
 import '../../data/models/app_enums.dart';
 import '../../data/models/user_model.dart';
@@ -68,27 +68,55 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: Stack(
           children: [
+            // Aurora orbs
             Positioned(
               left: -80,
-              top: -10,
+              top: -20,
               child: Container(
-                width: 190,
-                height: 190,
+                width: 240,
+                height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.highlight.withValues(alpha: 0.26),
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.auroraBlue.withValues(alpha: 0.32),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
             Positioned(
-              right: -70,
-              top: 120,
+              right: -60,
+              top: 100,
               child: Container(
-                width: 170,
-                height: 170,
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.14),
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.auroraCyan.withValues(alpha: 0.22),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: -30,
+              bottom: 60,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.auroraViolet.withValues(alpha: 0.18),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -100,8 +128,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ? AppShimmer(child: const SizedBox(height: 220))
                       : const LoginHeader(),
                   const SizedBox(height: 22),
-                  AppCard(
+                  GlassCard(
                     padding: const EdgeInsets.all(20),
+                    borderRadius: 28,
+                    sigmaX: 14,
+                    sigmaY: 14,
+                    borderColor: Colors.white.withValues(alpha: 0.25),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -177,13 +209,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        Container(
+                        GlassCard(
                           padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: AppColors.softSurfaceGradient,
-                            border: Border.all(color: AppColors.border),
-                          ),
+                          borderRadius: 16,
+                          sigmaX: 8,
+                          sigmaY: 8,
                           child: Row(
                             children: [
                               const Icon(

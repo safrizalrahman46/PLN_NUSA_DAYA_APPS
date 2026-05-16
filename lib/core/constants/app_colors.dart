@@ -52,4 +52,21 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // Glass / frosted surface tokens
+  static Color get glassLight => Colors.white.withValues(alpha: 0.15);
+  static Color get glassBorderLight => Colors.white.withValues(alpha: 0.30);
+  static Color get glassDark =>
+      const Color(0xFF0E1A2E).withValues(alpha: 0.40);
+  static Color get glassBorderDark =>
+      const Color(0xFF3A5A8A).withValues(alpha: 0.22);
+
+  // Pill nav backgrounds
+  static const Color pillNavLight = Colors.white;
+  static const Color pillNavDark = Color(0xFF111B2F);
+
+  // Aurora orb accent colors (splash & hero headers)
+  static const Color auroraBlue = Color(0xFF1A6BD6);
+  static const Color auroraCyan = Color(0xFF0EC8E8);
+  static const Color auroraViolet = Color(0xFF7B3FE4);
 }

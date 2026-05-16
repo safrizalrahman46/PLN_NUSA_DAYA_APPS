@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/section_title.dart';
 
 class ParameterInputSection extends StatelessWidget {
@@ -30,7 +30,7 @@ class ParameterInputSection extends StatelessWidget {
         ? 2.5
         : 2.8;
 
-    return AppCard(
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

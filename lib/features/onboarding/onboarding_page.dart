@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/widgets/app_brand_logo.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/glass_card.dart';
 import '../profile/settings_controller.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -52,15 +53,21 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: Stack(
           children: [
+            // Aurora orbs
             Positioned(
               top: -50,
               right: -40,
               child: Container(
-                width: 180,
-                height: 180,
+                width: 220,
+                height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.highlight.withValues(alpha: 0.26),
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.auroraCyan.withValues(alpha: 0.26),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -68,11 +75,16 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               bottom: -70,
               left: -30,
               child: Container(
-                width: 170,
-                height: 170,
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.14),
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.auroraViolet.withValues(alpha: 0.20),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -104,27 +116,25 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                               key: ValueKey(index),
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  width: 188,
-                                  height: 188,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(44),
-                                    color: Colors.white.withValues(alpha: 0.14),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.2),
+                                GlassCard(
+                                  padding: const EdgeInsets.all(24),
+                                  borderRadius: 44,
+                                  sigmaX: 12,
+                                  sigmaY: 12,
+                                  borderColor:
+                                      Colors.white.withValues(alpha: 0.30),
+                                  child: SizedBox(
+                                    width: 140,
+                                    height: 140,
+                                    child: Center(
+                                      child: index == 0
+                                          ? const AppBrandLogo.full(width: 128)
+                                          : Icon(
+                                              page.$3,
+                                              size: 80,
+                                              color: Colors.white,
+                                            ),
                                     ),
-                                  ),
-                                  child: Center(
-                                    child: index == 0
-                                        ? const AppBrandLogo.full(
-                                            width: 148,
-                                            withContainer: true,
-                                          )
-                                        : Icon(
-                                            page.$3,
-                                            size: 88,
-                                            color: Colors.white,
-                                          ),
                                   ),
                                 ),
                                 const SizedBox(height: 30),
@@ -175,6 +185,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     const SizedBox(height: 18),
                     AppButton(
                       label: isLast ? 'Mulai Sekarang' : 'Berikutnya',
+                      type: AppButtonType.glass,
                       onPressed: () {
                         if (isLast) {
                           _finish();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/widgets/app_card.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/glass_card.dart';
 
 class PhotoTypeCard extends StatelessWidget {
   const PhotoTypeCard({super.key, required this.photoType});
@@ -9,10 +10,26 @@ class PhotoTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return GlassCard(
       child: Row(
         children: [
-          const Icon(Icons.camera_alt_rounded, size: 32),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.accent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.camera_alt_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

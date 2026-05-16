@@ -19,13 +19,16 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       fontFamily: TextStyles.fontFamily,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         foregroundColor: AppColors.text,
-        titleTextStyle: TextStyles.titleLarge(AppColors.text),
+        titleTextStyle: TextStyles.titleLarge(AppColors.text).copyWith(
+          fontWeight: FontWeight.w800,
+        ),
       ),
       dividerColor: AppColors.border,
       splashColor: AppColors.primary.withValues(alpha: 0.08),
@@ -85,7 +88,11 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2.0),
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w700,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -138,13 +145,16 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.darkBackground,
+      scaffoldBackgroundColor: Colors.transparent,
       fontFamily: TextStyles.fontFamily,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         foregroundColor: Colors.white,
-        titleTextStyle: TextStyles.titleLarge(Colors.white),
+        titleTextStyle: TextStyles.titleLarge(Colors.white).copyWith(
+          fontWeight: FontWeight.w800,
+        ),
       ),
       cardTheme: CardThemeData(
         color: AppColors.darkSurface,

@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/section_title.dart';
 
 class PhotoRequirementCard extends StatelessWidget {
@@ -24,13 +25,37 @@ class PhotoRequirementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final narrow = MediaQuery.of(context).size.width < 420;
 
-    return AppCard(
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle(
-            title: 'Foto Bukti',
-            subtitle: 'Selfie operator dan foto mesin wajib diambil',
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.accent, AppColors.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.photo_camera_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: SectionTitle(
+                  title: 'Foto Bukti',
+                  subtitle: 'Selfie operator dan foto mesin wajib diambil',
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           narrow
@@ -87,12 +112,11 @@ class _PhotoBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
+      borderRadius: 18,
+      sigmaX: 6,
+      sigmaY: 6,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -104,8 +128,31 @@ class _PhotoBox extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: path.isEmpty
                   ? Container(
-                      color: Colors.black12,
-                      child: const Icon(Icons.camera_alt_rounded, size: 38),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.10),
+                            AppColors.accent.withValues(alpha: 0.06),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.camera_alt_rounded,
+                            size: 38,
+                            color: AppColors.primary.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Belum ada foto',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     )
                   : Image.file(File(path), fit: BoxFit.cover),
             ),

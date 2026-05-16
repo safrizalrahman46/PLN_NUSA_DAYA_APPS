@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/models/logsheet_model.dart';
 
@@ -19,31 +19,52 @@ class PendingUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      gradient: AppColors.softSurfaceGradient,
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.warning,
+                      AppColors.warning.withValues(alpha: 0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(
+                  Icons.cloud_upload_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   logsheet.proofId,
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
-              Container(
+              GlassCard(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: AppColors.warning.withValues(alpha: 0.14),
-                ),
+                borderRadius: 999,
+                sigmaX: 6,
+                sigmaY: 6,
                 child: Text(
                   'Pending',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.warning,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
             ],
@@ -64,21 +85,25 @@ class PendingUploadCard extends StatelessWidget {
           ),
           if (logsheet.syncErrorMessage != null) ...[
             const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
+            GlassCard(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.danger.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.danger.withValues(alpha: 0.2),
-                ),
+              borderRadius: 12,
+              sigmaX: 6,
+              sigmaY: 6,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.danger.withValues(alpha: 0.10),
+                  Colors.transparent,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderColor: AppColors.danger.withValues(alpha: 0.25),
               child: Text(
                 logsheet.syncErrorMessage!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.danger),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.danger,
+                    ),
               ),
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/floating_pill_nav.dart';
 import '../../data/models/app_enums.dart';
 import '../auth/auth_controller.dart';
 import '../notifications/notification_page.dart';
@@ -108,37 +109,50 @@ class _SupervisorShellPageState extends ConsumerState<SupervisorShellPage> {
       );
     }
 
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 260),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeOut,
-        transitionBuilder: (child, animation) {
-          final offset = Tween<Offset>(
-            begin: const Offset(0.03, 0),
-            end: Offset.zero,
-          ).animate(animation);
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(position: offset, child: child),
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey(safeIndex),
-          child: items[safeIndex].page,
-        ),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: safeIndex,
-        onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: items
-            .map(
-              (item) => NavigationDestination(
-                icon: Icon(item.icon),
-                label: item.label,
+      body: Stack(
+        children: [
+          // Main animated page content
+          Positioned.fill(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeOut,
+              transitionBuilder: (child, animation) {
+                final offset = Tween<Offset>(
+                  begin: const Offset(0.03, 0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(position: offset, child: child),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey(safeIndex),
+                child: items[safeIndex].page,
               ),
-            )
-            .toList(),
+            ),
+          ),
+          // Floating pill navigation
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: bottomInset + 16,
+            child: FloatingPillNav(
+              currentIndex: safeIndex,
+              onTap: (value) => setState(() => _index = value),
+              items: items
+                  .map((item) => FloatingPillNavItem(
+                        icon: item.icon,
+                        label: item.label,
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }

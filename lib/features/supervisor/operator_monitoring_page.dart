@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../data/repositories/supervisor_repository.dart';
@@ -71,7 +71,8 @@ class _OperatorMonitoringPageState
               return matchQuery && matchStatus && matchUnit && matchDate;
             }).toList();
             return ListView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(
+                  20, 20, 20, MediaQuery.of(context).padding.bottom + 108),
               children: [
                 MonitoringFilterBar(
                   onSearch: (value) => setState(() => _query = value),
@@ -96,12 +97,14 @@ class _OperatorMonitoringPageState
                   onUnitChanged: (value) => setState(() => _unit = value),
                 ),
                 const SizedBox(height: 16),
-                AppCard(
+                GlassCard(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.primary.withValues(alpha: 0.1),
-                      Colors.white,
+                      AppColors.primary.withValues(alpha: 0.12),
+                      Colors.transparent,
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                   child: Wrap(
                     spacing: 8,

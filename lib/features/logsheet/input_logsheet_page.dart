@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/widgets/app_card.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_error_state.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../data/local/hive_service.dart';
 import '../../data/models/machine_model.dart';
@@ -81,7 +82,11 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Input Logsheet')),
+      appBar: AppBar(
+        title: const Text('Input Logsheet'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       bottomNavigationBar: SubmitBottomBar(
         isSaving: form.isSaving,
         isSubmitting: form.isSubmitting,
@@ -168,13 +173,27 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
           }
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
             children: [
+              _InputHeader(
+                unitName: form.selectedUnit?.name ?? 'Pilih Unit',
+                machineName: form.selectedMachine?.serialNumber,
+              ),
+              const SizedBox(height: 16),
               if (widget.initialUnitId != null) ...[
-                const AppCard(
-                  child: Row(
+                GlassCard(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.accent.withValues(alpha: 0.18),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderColor: AppColors.accent.withValues(alpha: 0.35),
+                  child: const Row(
                     children: [
-                      Icon(Icons.flash_on_rounded, color: Colors.blue),
+                      Icon(Icons.flash_on_rounded, color: AppColors.accent),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -285,6 +304,130 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
         },
         loading: () => const AppLoading(),
         error: (error, _) => AppErrorState(message: error.toString()),
+      ),
+    );
+  }
+}
+
+class _InputHeader extends StatelessWidget {
+  const _InputHeader({required this.unitName, this.machineName});
+
+  final String unitName;
+  final String? machineName;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0A3D8E), Color(0xFF0A6FD8), AppColors.accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.30),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Positioned(
+            right: -40,
+            top: -40,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.auroraCyan.withValues(alpha: 0.25),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        unitName,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      if (machineName != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          machineName!,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.access_time_rounded,
+                          color: Colors.white, size: 13),
+                      const SizedBox(width: 5),
+                      Text(
+                        '$hour:$minute',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

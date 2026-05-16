@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/permissions/permission_service.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/glass_card.dart';
 import 'photo_preview_page.dart';
 import 'widgets/captured_photo_card.dart';
 import 'widgets/photo_type_card.dart';
@@ -68,7 +68,7 @@ class _CameraCapturePageState extends State<CameraCapturePage> {
         children: [
           PhotoTypeCard(photoType: widget.photoType),
           const SizedBox(height: 16),
-          AppCard(
+          GlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

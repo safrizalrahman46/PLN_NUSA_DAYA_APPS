@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../data/models/unit_model.dart';
 
 class UnitQuickAccessCard extends StatelessWidget {
@@ -20,7 +20,7 @@ class UnitQuickAccessCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final quickUnits = units.take(8).toList();
 
-    return AppCard(
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

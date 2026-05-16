@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/widgets/app_card.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/section_title.dart';
 
 class WarningParameterCard extends StatelessWidget {
@@ -10,7 +11,18 @@ class WarningParameterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return GlassCard(
+      gradient: LinearGradient(
+        colors: [
+          AppColors.warning.withValues(alpha: 0.14),
+          Colors.transparent,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderColor: warnings.isEmpty
+          ? null
+          : AppColors.warning.withValues(alpha: 0.35),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

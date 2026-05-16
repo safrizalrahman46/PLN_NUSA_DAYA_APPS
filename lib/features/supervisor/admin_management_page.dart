@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/section_title.dart';
 import '../../data/dummy/dummy_data.dart';
 import '../../data/models/app_enums.dart';
@@ -82,8 +82,7 @@ class _SectionList extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        AppCard(
-          gradient: AppColors.softSurfaceGradient,
+        GlassCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -91,21 +90,20 @@ class _SectionList extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Container(
+                  GlassCard(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 8,
+                      vertical: 6,
                     ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                    ),
+                    borderRadius: 999,
+                    sigmaX: 6,
+                    sigmaY: 6,
                     child: Text(
                       'Total ${items.length}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ),
                   const Spacer(),
@@ -123,37 +121,60 @@ class _SectionList extends StatelessWidget {
         const SizedBox(height: 16),
         ...items.asMap().entries.map(
           (entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: AppCard(
-              gradient: AppColors.softSurfaceGradient,
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      (entry.key + 1).toString(),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.accent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        (entry.key + 1).toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                title: Text(entry.value),
-                subtitle: const Text(
-                  'Edit / nonaktifkan / sinkronkan master data',
-                ),
-                trailing: FilledButton.tonalIcon(
-                  onPressed: () => _snack(context, 'Fitur edit master data dummy.'),
-                  icon: const Icon(Icons.edit_rounded, size: 18),
-                  label: const Text('Edit'),
-                ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.value,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        Text(
+                          'Edit / nonaktifkan / sinkronkan',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSoft,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () =>
+                        _snack(context, 'Fitur edit master data dummy.'),
+                    icon: const Icon(Icons.edit_rounded, size: 16),
+                    label: const Text('Edit'),
+                  ),
+                ],
               ),
             ),
           ),

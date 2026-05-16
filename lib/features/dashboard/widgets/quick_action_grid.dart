@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/section_title.dart';
 
 class QuickActionGrid extends StatelessWidget {
@@ -20,14 +20,56 @@ class QuickActionGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final items = [
-      ('Input Logsheet', Icons.edit_note_rounded, onInput),
-      ('Riwayat', Icons.history_rounded, onHistory),
-      ('Pending Upload', Icons.cloud_upload_rounded, onPending),
-      ('Profil', Icons.person_rounded, onProfile),
+      (
+        'Input Logsheet',
+        Icons.edit_note_rounded,
+        onInput,
+        const LinearGradient(
+          colors: [AppColors.primary, AppColors.accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        AppColors.primary,
+      ),
+      (
+        'Riwayat',
+        Icons.history_rounded,
+        onHistory,
+        LinearGradient(
+          colors: [AppColors.success, const Color(0xFF34D399)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        AppColors.success,
+      ),
+      (
+        'Pending Upload',
+        Icons.cloud_upload_rounded,
+        onPending,
+        LinearGradient(
+          colors: [AppColors.warning, const Color(0xFFFBBF24)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        AppColors.warning,
+      ),
+      (
+        'Profil',
+        Icons.person_rounded,
+        onProfile,
+        LinearGradient(
+          colors: [AppColors.auroraViolet, const Color(0xFFA855F7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        AppColors.auroraViolet,
+      ),
     ];
 
-    return AppCard(
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -41,51 +83,57 @@ class QuickActionGrid extends StatelessWidget {
             itemCount: items.length,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width >= 700 ? 4 : 2,
+              crossAxisCount:
+                  MediaQuery.of(context).size.width >= 700 ? 4 : 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 1.1,
             ),
             itemBuilder: (_, index) {
               final item = items[index];
-              return InkWell(
+              final accentColor = item.$5;
+              return GlassCard(
+                padding: const EdgeInsets.all(14),
+                borderRadius: 20,
+                sigmaX: 8,
+                sigmaY: 8,
                 onTap: item.$3,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary.withValues(alpha: 0.08),
-                        Colors.white,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                gradient: LinearGradient(
+                  colors: [
+                    accentColor.withValues(alpha: isDark ? 0.22 : 0.10),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: item.$4,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.32),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(item.$2, color: Colors.white, size: 20),
                     ),
-                    border: Border.all(color: Theme.of(context).dividerColor),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(item.$2, color: AppColors.primary),
-                      ),
-                      Text(
-                        item.$1,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+                    Text(
+                      item.$1,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : AppColors.text,
+                          ),
+                    ),
+                  ],
                 ),
               );
             },

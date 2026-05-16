@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/network_info.dart';
 import '../../../core/utils/date_helper.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_picker_field.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/section_title.dart';
 import '../../../data/models/machine_model.dart';
 import '../../../data/models/unit_model.dart';
@@ -33,14 +34,37 @@ class MachineSelectorCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final online = ref.watch(networkStatusProvider).valueOrNull ?? true;
 
-    return AppCard(
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle(
-            title: 'Informasi Unit',
-            subtitle:
-                'Pilih unit secara manual lalu pilih serial number mesin yang akan diinput',
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.electric_bolt_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: SectionTitle(
+                  title: 'Informasi Unit',
+                  subtitle: 'Pilih unit dan serial number mesin',
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           AppPickerField<UnitModel>(

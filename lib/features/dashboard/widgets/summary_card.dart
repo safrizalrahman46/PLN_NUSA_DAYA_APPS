@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 
 enum SummaryTone { primary, success, warning, danger }
 
@@ -21,6 +21,7 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = switch (tone) {
       SummaryTone.primary => AppColors.primary,
       SummaryTone.success => AppColors.success,
@@ -28,30 +29,68 @@ class SummaryCard extends StatelessWidget {
       SummaryTone.danger => AppColors.danger,
     };
 
-    return AppCard(
+    final gradient = switch (tone) {
+      SummaryTone.primary => const LinearGradient(
+          colors: [AppColors.primary, AppColors.accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      SummaryTone.success => LinearGradient(
+          colors: [AppColors.success, const Color(0xFF34D399)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      SummaryTone.warning => LinearGradient(
+          colors: [AppColors.warning, const Color(0xFFFBBF24)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      SummaryTone.danger => LinearGradient(
+          colors: [AppColors.danger, const Color(0xFFF87171)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+    };
+
+    return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  gradient: gradient,
                   borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Icon(icon, color: color),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
               const Spacer(),
               Container(
-                width: 9,
-                height: 9,
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: color.withValues(alpha: 0.72),
+                  color: color,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.50),
+                      blurRadius: 6,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -59,14 +98,19 @@ class SummaryCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark ? Colors.white60 : AppColors.textSoft,
+                    ),
+              ),
               const SizedBox(height: 2),
               Text(
                 value,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.text,
-                ),
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : AppColors.text,
+                    ),
               ),
             ],
           ),

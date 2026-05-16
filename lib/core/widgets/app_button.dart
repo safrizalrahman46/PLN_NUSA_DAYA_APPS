@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
+import 'glass_card.dart';
 
-enum AppButtonType { filled, outlined, tonal }
+enum AppButtonType { filled, outlined, tonal, glass }
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -81,19 +82,86 @@ class AppButton extends StatelessWidget {
           child: child,
         );
       case AppButtonType.filled:
-        return ElevatedButton(
-          onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            minimumSize: fullWidth ? const Size.fromHeight(52) : null,
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
+        final isDisabled = isLoading || onPressed == null;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: isDisabled
+                ? null
+                : const LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+            color: isDisabled ? Colors.grey.shade300 : null,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isDisabled
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.36),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              onTap: isDisabled ? null : onPressed,
               borderRadius: BorderRadius.circular(18),
+              splashColor: Colors.white.withValues(alpha: 0.18),
+              highlightColor: Colors.white.withValues(alpha: 0.08),
+              child: SizedBox(
+                height: fullWidth ? 52 : null,
+                width: fullWidth ? double.infinity : null,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    child: DefaultTextStyle(
+                      style: TextStyle(
+                        color: isDisabled ? Colors.grey.shade600 : Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                      child: IconTheme(
+                        data: IconThemeData(
+                          color:
+                              isDisabled ? Colors.grey.shade600 : Colors.white,
+                          size: 18,
+                        ),
+                        child: child,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-          child: child,
+        );
+      case AppButtonType.glass:
+        return GlassCard(
+          padding: EdgeInsets.zero,
+          borderRadius: 18,
+          onTap: isLoading ? null : onPressed,
+          child: SizedBox(
+            height: fullWidth ? 52 : null,
+            width: fullWidth ? double.infinity : null,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DefaultTextStyle(
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                  child: child,
+                ),
+              ),
+            ),
+          ),
         );
     }
   }

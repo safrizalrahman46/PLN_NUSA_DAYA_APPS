@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_helper.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/glass_card.dart';
 import '../../../data/dummy/dummy_data.dart';
 
 class HeatmapStatusTable extends StatelessWidget {
@@ -21,8 +21,7 @@ class HeatmapStatusTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final slots = DateHelper.reportSlots();
 
-    return AppCard(
-      gradient: AppColors.softSurfaceGradient,
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

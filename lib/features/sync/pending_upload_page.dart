@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_empty_state.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../data/models/logsheet_model.dart';
@@ -45,19 +45,22 @@ class PendingUploadPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () => _refresh(ref),
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.fromLTRB(
+              20, 20, 20, MediaQuery.of(context).padding.bottom + 108),
           children: [
             SyncStatusBanner(state: syncState),
             const SizedBox(height: 16),
             pending.when(
               data: (items) => Column(
                 children: [
-                  AppCard(
+                  GlassCard(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.primary.withValues(alpha: 0.08),
-                        Colors.white,
+                        AppColors.primary.withValues(alpha: 0.12),
+                        Colors.transparent,
                       ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                     child: Row(
                       children: [

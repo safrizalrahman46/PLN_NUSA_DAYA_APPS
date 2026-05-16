@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/section_title.dart';
 
 class SystemControlPage extends StatelessWidget {
@@ -15,7 +15,7 @@ class SystemControlPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          AppCard(
+          GlassCard(
             gradient: Theme.of(context).brightness == Brightness.dark
                 ? AppColors.darkGradient
                 : AppColors.heroGradient,
@@ -59,8 +59,7 @@ class SystemControlPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          AppCard(
-            gradient: AppColors.softSurfaceGradient,
+          GlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -196,27 +195,35 @@ class _SettingRow extends StatelessWidget {
       );
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 8),
-          SizedBox(width: 130, child: Text(label)),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.right,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        borderRadius: 12,
+        sigmaX: 6,
+        sigmaY: 6,
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 14, color: AppColors.primary),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            SizedBox(width: 120, child: Text(label)),
+            Expanded(
+              child: Text(
+                value,
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

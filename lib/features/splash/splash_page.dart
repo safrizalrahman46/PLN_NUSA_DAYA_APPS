@@ -11,6 +11,7 @@ import '../../core/constants/app_strings.dart';
 import '../../core/network/network_info.dart';
 import '../../core/widgets/app_brand_logo.dart';
 import '../../core/widgets/app_shimmer.dart';
+import '../../core/widgets/glass_card.dart';
 import '../auth/auth_controller.dart';
 import '../profile/settings_controller.dart';
 
@@ -22,8 +23,10 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _animationController;
+  late final AnimationController _auroraController;
+
   late final Animation<double> _logoOpacity;
   late final Animation<double> _logoScale;
   late final Animation<Offset> _logoSlide;
@@ -39,6 +42,11 @@ class _SplashPageState extends ConsumerState<SplashPage>
       vsync: this,
       duration: const Duration(milliseconds: 2300),
     );
+    _auroraController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat();
+
     _logoOpacity = CurvedAnimation(
       parent: _animationController,
       curve: const Interval(0.15, 0.6, curve: Curves.easeOut),
@@ -86,6 +94,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   @override
   void dispose() {
     _animationController.dispose();
+    _auroraController.dispose();
     super.dispose();
   }
 
@@ -123,18 +132,20 @@ class _SplashPageState extends ConsumerState<SplashPage>
         decoration: const BoxDecoration(gradient: AppColors.splashGradient),
         child: Stack(
           children: [
+            // Radial drift layer (original)
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _animationController,
                 builder: (context, _) {
-                  final drift = math.sin(_animationController.value * math.pi);
+                  final drift =
+                      math.sin(_animationController.value * math.pi);
                   return DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: RadialGradient(
                         center: Alignment(-0.68 + (drift * 0.1), -0.84),
                         radius: 1.35,
                         colors: [
-                          AppColors.highlight.withValues(alpha: 0.28),
+                          AppColors.highlight.withValues(alpha: 0.22),
                           Colors.transparent,
                         ],
                       ),
@@ -143,123 +154,205 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 },
               ),
             ),
-            Positioned(
-              right: -64,
-              top: 90,
-              child: AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(-_animationController.value * 26, 0),
-                    child: Container(
-                      width: 190,
-                      height: 190,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.highlight.withValues(alpha: 0.2),
+
+            // Aurora orb 1 — top-left, blue
+            AnimatedBuilder(
+              animation: _auroraController,
+              builder: (context, _) {
+                final dy =
+                    math.sin(_auroraController.value * math.pi * 2) * 18;
+                return Positioned(
+                  left: -80,
+                  top: 40 + dy,
+                  child: Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.auroraBlue.withValues(alpha: 0.38),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-            Positioned(
-              left: -70,
-              bottom: 80,
-              child: AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(_animationController.value * 22, 0),
-                    child: Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.12),
+
+            // Aurora orb 2 — right, cyan
+            AnimatedBuilder(
+              animation: _auroraController,
+              builder: (context, _) {
+                final dx =
+                    math.cos(_auroraController.value * math.pi * 2) * 14;
+                return Positioned(
+                  right: -60 + dx,
+                  top: 180,
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.auroraCyan.withValues(alpha: 0.30),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
+
+            // Aurora orb 3 — bottom-left, violet
+            AnimatedBuilder(
+              animation: _auroraController,
+              builder: (context, _) {
+                final dy =
+                    math.cos((_auroraController.value + 0.33) * math.pi * 2) *
+                        20;
+                return Positioned(
+                  left: -40,
+                  bottom: 70 + dy,
+                  child: Container(
+                    width: 240,
+                    height: 240,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.auroraViolet.withValues(alpha: 0.24),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Dot grid texture
             Positioned.fill(
               child: Opacity(
-                opacity: 0.16,
+                opacity: 0.14,
                 child: CustomPaint(painter: _GridPainter()),
               ),
             ),
+
+            // Main content
             SafeArea(
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Logo wrapped in glass card
                     SlideTransition(
                       position: _logoSlide,
                       child: FadeTransition(
                         opacity: _logoOpacity,
                         child: ScaleTransition(
                           scale: _logoScale,
-                          child: const AppBrandLogo.full(
-                            width: 184,
-                            withContainer: true,
+                          child: GlassCard(
+                            padding: const EdgeInsets.all(28),
+                            borderRadius: 32,
+                            sigmaX: 16,
+                            sigmaY: 16,
+                            borderColor:
+                                Colors.white.withValues(alpha: 0.35),
+                            child: const AppBrandLogo.full(width: 156),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 30),
+
+                    const SizedBox(height: 32),
+
+                    // Title
                     SlideTransition(
                       position: _titleSlide,
                       child: FadeTransition(
                         opacity: _titleOpacity,
                         child: Text(
                           'PLN Nusa Daya',
-                          style: Theme.of(context).textTheme.displaySmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .displaySmall
                               ?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
                               ),
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 4),
+
                     FadeTransition(
                       opacity: _subtitleOpacity,
                       child: Text(
                         AppStrings.shortAppName,
                         style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: Colors.white70),
+                            ?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 28),
+
+                    const SizedBox(height: 40),
+
+                    // Loading footer wrapped in glass card
                     FadeTransition(
                       opacity: _footerOpacity,
-                      child: Column(
-                        children: [
-                          AppShimmer.block(width: 196, height: 12),
-                          const SizedBox(height: 22),
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(999),
+                      child: GlassCard(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 28, vertical: 20),
+                        borderRadius: 40,
+                        sigmaX: 10,
+                        sigmaY: 10,
+                        borderColor:
+                            Colors.white.withValues(alpha: 0.28),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppShimmer.block(width: 180, height: 10),
+                            const SizedBox(height: 18),
+                            ShaderMask(
+                              blendMode: BlendMode.srcIn,
+                              shaderCallback: (bounds) =>
+                                  const LinearGradient(
+                                colors: [Colors.white, AppColors.auroraCyan],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds),
+                              child: const SizedBox(
+                                width: 36,
+                                height: 36,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3.0,
+                                ),
+                              ),
                             ),
-                            padding: const EdgeInsets.all(9),
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.8,
+                            const SizedBox(height: 14),
+                            Text(
+                              network
+                                  ? 'Menyiapkan sistem monitoring PLTD...'
+                                  : 'Mode offline aktif',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Colors.white
+                                        .withValues(alpha: 0.80),
+                                  ),
                             ),
-                          ),
-                          const SizedBox(height: 18),
-                          Text(
-                            network
-                                ? 'Menyiapkan sistem monitoring PLTD...'
-                                : 'Mode offline aktif',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: Colors.white70),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],

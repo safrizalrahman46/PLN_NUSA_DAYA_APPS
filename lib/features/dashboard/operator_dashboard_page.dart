@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/network_info.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_helper.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_error_state.dart';
+import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_shimmer.dart';
 import '../../data/dummy/dummy_data.dart';
 import '../../data/local/hive_service.dart';
@@ -77,25 +77,27 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 120),
+          padding: EdgeInsets.fromLTRB(
+              20, 18, 20, MediaQuery.of(context).padding.bottom + 108),
           children: [
             DashboardHeader(user: user, online: online),
             const SizedBox(height: 18),
             if (!online)
-              AppCard(
+              GlassCard(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.highlight.withValues(alpha: 0.16),
-                    Colors.white,
+                    AppColors.warning.withValues(alpha: 0.22),
+                    Colors.transparent,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                borderColor: AppColors.warning.withValues(alpha: 0.35),
                 child: Row(
                   children: [
                     Icon(Icons.wifi_off_rounded, color: AppColors.warning),
-                    SizedBox(width: 12),
-                    Expanded(
+                    const SizedBox(width: 12),
+                    const Expanded(
                       child: Text(
                         'Perangkat sedang offline. Data baru akan disimpan lokal terlebih dahulu.',
                       ),
@@ -209,7 +211,7 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                   _AnimatedSection(
                     index: 4,
                     animateIn: _animateIn,
-                    child: AppCard(
+                    child: GlassCard(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final tileWidth = constraints.maxWidth < 420
@@ -316,13 +318,11 @@ class _ScopeInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: AppColors.softSurfaceGradient,
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
+      borderRadius: 18,
+      sigmaX: 8,
+      sigmaY: 8,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

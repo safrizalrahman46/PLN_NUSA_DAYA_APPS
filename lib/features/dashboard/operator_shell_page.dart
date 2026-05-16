@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/floating_pill_nav.dart';
 
 import '../history/history_page.dart';
 import '../logsheet/input_logsheet_page.dart';
@@ -23,6 +24,29 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
     HistoryPage(),
     PendingUploadPage(),
     ProfilePage(),
+  ];
+
+  static const _navItems = [
+    FloatingPillNavItem(
+      icon: Icons.grid_view_outlined,
+      activeIcon: Icons.grid_view_rounded,
+      label: 'Dashboard',
+    ),
+    FloatingPillNavItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Riwayat',
+    ),
+    FloatingPillNavItem(
+      icon: Icons.cloud_upload_outlined,
+      activeIcon: Icons.cloud_upload_rounded,
+      label: 'Pending',
+    ),
+    FloatingPillNavItem(
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
+      label: 'Profil',
+    ),
   ];
 
   @override
@@ -72,34 +96,43 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
       );
     }
 
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      body: _pages[_index],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openInput,
-        icon: const Icon(Icons.edit_note_rounded),
-        label: const Text('Input Logsheet'),
-        backgroundColor: AppColors.highlight,
-        foregroundColor: AppColors.primaryDark,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_rounded),
-            label: 'Dashboard',
+      body: Stack(
+        children: [
+          // Main page content
+          Positioned.fill(
+            child: _pages[_index],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.history_rounded),
-            label: 'Riwayat',
+          // Floating pill navigation
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: bottomInset + 16,
+            child: FloatingPillNav(
+              currentIndex: _index,
+              onTap: (value) => setState(() => _index = value),
+              items: _navItems,
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.cloud_upload_rounded),
-            label: 'Pending',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profil',
+          // Input Logsheet FAB
+          Positioned(
+            bottom: bottomInset + 16 + 68 + 10,
+            right: 20,
+            child: FloatingActionButton.extended(
+              onPressed: _openInput,
+              icon: const Icon(Icons.edit_note_rounded, size: 20),
+              label: const Text(
+                'Input',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+              backgroundColor: AppColors.highlight,
+              foregroundColor: AppColors.primaryDark,
+              elevation: 4,
+              extendedPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            ),
           ),
         ],
       ),
