@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository.dart';
 
@@ -70,7 +71,7 @@ class AuthController extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, user: user, clearError: true);
       return true;
     } catch (error) {
-      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      state = state.copyWith(isLoading: false, errorMessage: ApiException.fromObject(error).message);
       return false;
     }
   }
@@ -78,5 +79,10 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState();
+  }
+
+  Future<void> updateUser(UserModel user) async {
+    final saved = await _repository.updateCurrentUser(user);
+    state = state.copyWith(user: saved);
   }
 }

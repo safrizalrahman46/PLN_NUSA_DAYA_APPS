@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
-import '../../core/widgets/app_brand_logo.dart';
 import '../profile/settings_controller.dart';
 
+// ─── Data Model ──────────────────────────────────────────────────────────────
+class _OnboardingData {
+  const _OnboardingData({
+    required this.tag,
+    required this.headline,
+    required this.description,
+    required this.icon,
+    required this.imageAsset,
+    required this.orbColor1,
+    required this.orbColor2,
+  });
+  final String tag;
+  final String headline;
+  final String description;
+  final IconData icon;
+  final String imageAsset;
+  final Color orbColor1;
+  final Color orbColor2;
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
 
@@ -15,458 +36,313 @@ class OnboardingPage extends ConsumerStatefulWidget {
 
 class _OnboardingPageState extends ConsumerState<OnboardingPage>
     with TickerProviderStateMixin {
-  late final PageController _pageCtrl;
-  late final AnimationController _sheetCtrl;
-  late final AnimationController _floatingCtrl;
-  late final Animation<Offset> _sheetSlide;
-  late final Animation<double> _sheetOpacity;
-  late final Animation<double> _floatingAnim;
+  late final PageController _pageController;
+  late final AnimationController _contentAnim;
+  late final AnimationController _splashLogoAnim;
+  late final AnimationController _orbAnim;
 
-  int _currentPage = 0;
+  int _currentIndex = 0;
+  bool _isAnimating = false;
 
-  final _slides = const [
-    (
-      imagePath: null,
-      title: 'PLN Logsheet',
-      subtitle: 'Pantau operasional mesin PLTD dengan mudah dan real-time',
+  static const _photoSlides = [
+    _OnboardingData(
+      tag: 'LAPORAN DIGITAL',
+      headline: 'Laporan operasional, secepat satu sentuhan jari.',
+      description:
+          'Input data mesin terstruktur dan rapi — langsung dari lapangan.',
       icon: Icons.description_outlined,
-      color: Color(0xFF0A6FD8),
+      imageAsset: 'assets/images/onboarding/onboarding_laporan.jpg',
+      orbColor1: Color(0xFF22C55E),
+      orbColor2: Color(0xFF10B981),
     ),
-    (
-      imagePath: 'assets/images/onboarding_1.png',
-      title: 'Validasi GPS',
-      subtitle: 'Lacak lokasi operator dan dokumentasi foto langsung dari lapangan.',
+    _OnboardingData(
+      tag: 'GPS & FOTO BUKTI',
+      headline: 'Lokasi terverifikasi, dokumentasi terjamin.',
+      description:
+          'Validasi titik operator dan dokumentasi mesin dengan akurasi tinggi.',
       icon: Icons.location_on_outlined,
-      color: Color(0xFF23B7FF),
+      imageAsset: 'assets/images/onboarding/onboarding_gps.jpg',
+      orbColor1: Color(0xFF14B8A6),
+      orbColor2: Color(0xFF06B6D4),
     ),
-    (
-      imagePath: 'assets/images/onboarding_2.png',
-      title: 'Offline First',
-      subtitle: 'Input laporan tanpa internet, data tersinkron otomatis saat online.',
+    _OnboardingData(
+      tag: 'OFFLINE FIRST',
+      headline: 'Tetap produktif, meski sinyal hilang.',
+      description:
+          'Data tersimpan aman dan tersinkron otomatis ketika online kembali.',
       icon: Icons.cloud_off_outlined,
-      color: Color(0xFF00D4FF),
-    ),
-    (
-      imagePath: 'assets/images/onboarding_3.png',
-      title: 'Koordinasi Tim',
-      subtitle: 'Operator & supervisor bekerja sama dalam satu platform efisien.',
-      icon: Icons.people_outline_rounded,
-      color: Color(0xFF1CB3FF),
+      imageAsset: 'assets/images/onboarding/onboarding_offline.jpg',
+      orbColor1: Color(0xFF84CC16),
+      orbColor2: Color(0xFF22C55E),
     ),
   ];
+
+  // total pages = splash + photo slides
+  int get _totalPages => _photoSlides.length + 1;
 
   @override
   void initState() {
     super.initState();
-    _pageCtrl = PageController();
+    _pageController = PageController();
 
-    _sheetCtrl = AnimationController(
+    _contentAnim = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 550),
     )..forward();
-    _sheetSlide = Tween<Offset>(
-      begin: const Offset(0, 0.35),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _sheetCtrl, curve: Curves.easeOutCubic));
-    _sheetOpacity = CurvedAnimation(
-      parent: _sheetCtrl,
-      curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
-    );
 
-    _floatingCtrl = AnimationController(
+    _splashLogoAnim = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 2500),
     )..repeat(reverse: true);
-    _floatingAnim = Tween<double>(begin: 0, end: 12).animate(
-      CurvedAnimation(parent: _floatingCtrl, curve: Curves.easeInOut),
+
+    _orbAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 7000),
+    )..repeat(reverse: true);
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
     );
   }
 
   @override
   void dispose() {
-    _pageCtrl.dispose();
-    _sheetCtrl.dispose();
-    _floatingCtrl.dispose();
+    _pageController.dispose();
+    _contentAnim.dispose();
+    _splashLogoAnim.dispose();
+    _orbAnim.dispose();
     super.dispose();
   }
 
-  void _next() {
-    if (_currentPage < _slides.length - 1) {
-      _pageCtrl.nextPage(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubic,
-      );
-    } else {
-      _finish();
-    }
-  }
-
-  void _finish() async {
+  Future<void> _finish() async {
     await ref.read(appSettingsProvider.notifier).setOnboardingSeen();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, AppRoutes.login);
   }
 
-  void _skip() => _finish();
+  void _goTo(int index) {
+    if (_isAnimating || index == _currentIndex) return;
+    _isAnimating = true;
+    _contentAnim.reset();
+    _pageController
+        .animateToPage(
+          index,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+        )
+        .then((_) => _isAnimating = false);
+    _contentAnim.forward();
+  }
+
+  void _goNext() {
+    if (_currentIndex < _totalPages - 1) _goTo(_currentIndex + 1);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _currentIndex == 0
+          ? SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent)
+          : SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: PageView.builder(
+          controller: _pageController,
+          itemCount: _totalPages,
+          onPageChanged: (i) {
+            setState(() => _currentIndex = i);
+            _contentAnim.reset();
+            _contentAnim.forward();
+          },
+          itemBuilder: (_, i) {
+            if (i == 0) return _SplashSlide(splashAnim: _splashLogoAnim, onNext: _goNext, onSkip: _finish);
+            final data = _photoSlides[i - 1];
+            return _PhotoSlide(
+              data: data,
+              slideIndex: i,
+              currentIndex: _currentIndex,
+              totalPhotoSlides: _photoSlides.length,
+              contentAnim: _contentAnim,
+              orbAnim: _orbAnim,
+              isLast: i == _totalPages - 1,
+              onNext: _goNext,
+              onFinish: _finish,
+              onSkip: _finish,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+// ─── Splash Slide ─────────────────────────────────────────────────────────────
+class _SplashSlide extends StatelessWidget {
+  const _SplashSlide({
+    required this.splashAnim,
+    required this.onNext,
+    required this.onSkip,
+  });
+
+  final AnimationController splashAnim;
+  final VoidCallback onNext;
+  final VoidCallback onSkip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF0FDF4), Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
+        ),
+      ),
+      child: Stack(
         children: [
-          // ── Full-screen PageView with image background ──
-          PageView.builder(
-            controller: _pageCtrl,
-            physics: const PageScrollPhysics(),
-            scrollDirection: Axis.horizontal,
-            onPageChanged: (i) {
-              setState(() => _currentPage = i);
-              _sheetCtrl.reset();
-              _sheetCtrl.forward();
-            },
-            itemCount: _slides.length,
-            itemBuilder: (context, index) => _ImageSlideWidget(
-              slide: _slides[index],
-              floatingAnim: _floatingAnim,
-            ),
-          ),
-
-          // ── Dark overlay gradient ──
+          // Decorative background blobs
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: size.height * 0.65,
+            top: -60,
+            right: -60,
             child: Container(
+              width: 220,
+              height: 220,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.20),
-                    Colors.black.withValues(alpha: 0.70),
-                    Colors.black.withValues(alpha: 0.95),
-                  ],
-                  stops: const [0.0, 0.25, 0.60, 1.0],
-                ),
+                shape: BoxShape.circle,
+                 color: AppColors.primary.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 80,
+            left: -40,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                 color: AppColors.primary.withValues(alpha: 0.06),
               ),
             ),
           ),
 
-          // ── Top bar: Logo + Skip ──
           SafeArea(
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, -0.15),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(
-                  parent: _sheetCtrl,
-                  curve: const Interval(0, 0.6, curve: Curves.easeOutCubic),
-                ),
-              ),
-              child: FadeTransition(
-                opacity: Tween<double>(begin: 0, end: 1).animate(
-                  CurvedAnimation(
-                    parent: _sheetCtrl,
-                    curve: const Interval(0, 0.4, curve: Curves.easeOut),
+            child: Column(
+              children: [
+                // Skip
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 20, top: 8),
+                    child: TextButton(
+                      onPressed: onSkip,
+                      child: Text(
+                        'Lewati',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: Row(
+
+                const Spacer(),
+
+                // Floating animated logo
+                AnimatedBuilder(
+                  animation: splashAnim,
+                  builder: (_, child) {
+                    final t = CurvedAnimation(
+                      parent: splashAnim,
+                      curve: Curves.easeInOut,
+                    ).value;
+                    return Transform.translate(
+                      offset: Offset(0, -10 * t),
+                      child: child,
+                    );
+                  },
+                  child: Column(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 110,
+                        height: 110,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.20),
-                            width: 1.2,
-                          ),
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.30),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                               color: AppColors.primary.withValues(alpha: 0.35),
+                              blurRadius: 32,
+                              offset: const Offset(0, 12),
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.all(8),
-                        child: const AppBrandLogo.mark(width: 28),
+                        child: const Center(
+                          child: Icon(Icons.bolt, color: Colors.white, size: 56),
+                        ),
                       ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: _skip,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.20),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Text(
-                            'Lewati',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                ),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Digital Logsheet\nPLTD',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: const Color(0xFF14532D),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          height: 1.2,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 48),
+                        child: Text(
+                          'Solusi pencatatan operasional mesin\nyang cepat, akurat, dan modern',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF166534),
+                            fontSize: 15,
+                            height: 1.6,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-          ),
 
-          // ── Bottom Sheet with Content ──
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SlideTransition(
-              position: _sheetSlide,
-              child: FadeTransition(
-                opacity: _sheetOpacity,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Page indicator dots - Animated bars with stagger
-                        Align(
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(
-                              _slides.length,
-                              (i) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 6),
-                                child: AnimatedBuilder(
-                                  animation: _sheetOpacity,
-                                  builder: (context, child) =>
-                                      AnimatedContainer(
-                                    duration: const Duration(milliseconds: 500),
-                                    curve: i == _currentPage
-                                        ? Curves.elasticOut
-                                        : Curves.easeOutCubic,
-                                    width: i == _currentPage ? 32 : 10,
-                                    height: 5,
-                                    decoration: BoxDecoration(
-                                      color: i == _currentPage
-                                          ? Colors.white
-                                          : Colors.white.withValues(alpha: 0.25),
-                                      borderRadius:
-                                          BorderRadius.circular(999),
-                                      boxShadow: i == _currentPage
-                                          ? [
-                                              BoxShadow(
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.40),
-                                                blurRadius: 12,
-                                                spreadRadius: 2,
-                                              ),
-                                            ]
-                                          : [],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                const SizedBox(height: 40),
 
-                        const SizedBox(height: 28),
-
-                        // Title with smooth entrance animation
-                        SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.20),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(parent: _sheetCtrl, 
-                              curve: const Interval(0.1, 0.8, curve: Curves.easeOutCubic)),
-                          ),
-                          child: FadeTransition(
-                            opacity: Tween<double>(
-                              begin: 0,
-                              end: 1,
-                            ).animate(
-                              CurvedAnimation(parent: _sheetCtrl,
-                                curve: const Interval(0.1, 0.6, curve: Curves.easeOut)),
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 500),
-                              switchInCurve: Curves.easeOut,
-                              switchOutCurve: Curves.easeIn,
-                              transitionBuilder: (child, anim) =>
-                                  SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0.20, 0),
-                                  end: Offset.zero,
-                                ).animate(anim),
-                                child: FadeTransition(
-                                  opacity: anim,
-                                  child: child,
-                                ),
-                              ),
-                              child: Text(
-                                _slides[_currentPage].title,
-                                key: ValueKey(_currentPage),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w900,
-                                      height: 1.0,
-                                      letterSpacing: -0.8,
-                                      fontSize: 36,
-                                    ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // Subtitle with smooth entrance animation
-                        SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.20),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(parent: _sheetCtrl,
-                              curve: const Interval(0.15, 0.85, curve: Curves.easeOutCubic)),
-                          ),
-                          child: FadeTransition(
-                            opacity: Tween<double>(
-                              begin: 0,
-                              end: 1,
-                            ).animate(
-                              CurvedAnimation(parent: _sheetCtrl,
-                                curve: const Interval(0.15, 0.7, curve: Curves.easeOut)),
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 500),
-                              switchInCurve: Curves.easeOut,
-                              switchOutCurve: Curves.easeIn,
-                              transitionBuilder: (child, anim) =>
-                                  SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0.20, 0),
-                                  end: Offset.zero,
-                                ).animate(anim),
-                                child: FadeTransition(
-                                  opacity: anim,
-                                  child: child,
-                                ),
-                              ),
-                              child: Text(
-                                _slides[_currentPage].subtitle,
-                                key: ValueKey('sub_$_currentPage'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.78),
-                                      height: 1.7,
-                                      fontSize: 16,
-                                      letterSpacing: 0.3,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 36),
-
-                        // Get Started Button - Animated with floating & glow effect
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: AnimatedBuilder(
-                            animation: _floatingAnim,
-                            builder: (context, child) => Transform.translate(
-                              offset: Offset(0, _floatingAnim.value * 0.5),
-                              child: child,
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _next,
-                                borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        AppColors.primary,
-                                        AppColors.accent,
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.40),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
-                                        spreadRadius: 2,
-                                      ),
-                                      BoxShadow(
-                                        color: AppColors.accent
-                                            .withValues(alpha: 0.20),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      _currentPage == _slides.length - 1
-                                          ? 'Selesai'
-                                          : 'Get Started',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.8,
-                                            fontSize: 16,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                // Feature pills
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _FeaturePill(icon: Icons.flash_on, label: 'Cepat'),
+                      const SizedBox(width: 12),
+                      _FeaturePill(icon: Icons.my_location, label: 'Akurat'),
+                      const SizedBox(width: 12),
+                      _FeaturePill(icon: Icons.sync, label: 'Sinkron'),
+                    ],
                   ),
                 ),
-              ),
+
+                const Spacer(),
+
+                // CTA button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                  child: _GreenButton(
+                    label: 'Mulai Perjalanan →',
+                    onTap: onNext,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -475,297 +351,365 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Image Slide Widget with Parallax
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _ImageSlideWidget extends StatefulWidget {
-  const _ImageSlideWidget({
-    required this.slide,
-    required this.floatingAnim,
-  });
-
-  final ({
-    String? imagePath,
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-  }) slide;
-
-  final Animation<double> floatingAnim;
+class _FeaturePill extends StatelessWidget {
+  const _FeaturePill({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
 
   @override
-  State<_ImageSlideWidget> createState() => _ImageSlideWidgetState();
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFBBF7D0), width: 1.5),
+        boxShadow: [
+           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 24),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF166534),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _ImageSlideWidgetState extends State<_ImageSlideWidget> {
+// ─── Photo Slide ──────────────────────────────────────────────────────────────
+class _PhotoSlide extends StatelessWidget {
+  const _PhotoSlide({
+    required this.data,
+    required this.slideIndex,
+    required this.currentIndex,
+    required this.totalPhotoSlides,
+    required this.contentAnim,
+    required this.orbAnim,
+    required this.isLast,
+    required this.onNext,
+    required this.onFinish,
+    required this.onSkip,
+  });
+
+  final _OnboardingData data;
+  final int slideIndex;
+  final int currentIndex;
+  final int totalPhotoSlides;
+  final AnimationController contentAnim;
+  final AnimationController orbAnim;
+  final bool isLast;
+  final VoidCallback onNext;
+  final VoidCallback onFinish;
+  final VoidCallback onSkip;
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (widget.slide.imagePath == null)
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(widget.slide.color, Colors.black, 0.3)!,
-                  Color.lerp(widget.slide.color, Colors.black, 0.1)!,
-                ],
-              ),
+        // Background image
+        Image.network(
+          data.imageAsset,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              color: const Color(0xFF1F2937),
             ),
-            child: Stack(
+          ),
+
+        // Animated orbs
+        AnimatedBuilder(
+          animation: orbAnim,
+          builder: (_, __) {
+            final t = CurvedAnimation(parent: orbAnim, curve: Curves.easeInOut).value;
+            return Stack(
               children: [
-                _FloatingParticles(color: widget.slide.color),
-                Center(
-                  child: AnimatedBuilder(
-                    animation: widget.floatingAnim,
-                    builder: (context, child) => Transform.translate(
-                      offset: Offset(0, -widget.floatingAnim.value),
-                      child: child,
-                    ),
-                    child: Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.18),
-                            Colors.white.withValues(alpha: 0.08),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: widget.slide.color.withValues(alpha: 0.25),
-                            blurRadius: 30,
-                            spreadRadius: 5,
-                          ),
+                Positioned(
+                  top: -40 + (t * 20),
+                  right: -40 + (t * 10),
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                           data.orbColor1.withValues(alpha: 0.55),
+                          Colors.transparent,
                         ],
                       ),
-                      child: Icon(
-                        widget.slide.icon,
-                        size: 70,
-                        color: Colors.white,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 180 + (t * 15),
+                  left: -50 + (t * 8),
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                           data.orbColor2.withValues(alpha: 0.5),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
                 ),
               ],
-            ),
-          )
-        else
-          _ImageAssetWidget(
-            imagePath: widget.slide.imagePath!,
-            fallbackColor: widget.slide.color,
-          ),
-
-        // Subtle shine effect
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.08),
-                  Colors.transparent,
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.12),
-                ],
-              ),
-            ),
-          ),
+            );
+          },
         ),
-      ],
-    );
-  }
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Floating Particles Background
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _FloatingParticles extends StatefulWidget {
-  const _FloatingParticles({required this.color});
-  final Color color;
-
-  @override
-  State<_FloatingParticles> createState() => _FloatingParticlesState();
-}
-
-class _FloatingParticlesState extends State<_FloatingParticles>
-    with TickerProviderStateMixin {
-  late final AnimationController _ctrl1;
-  late final AnimationController _ctrl2;
-  late final AnimationController _ctrl3;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl1 = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
-    )..repeat();
-    _ctrl2 = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat();
-    _ctrl3 = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl1.dispose();
-    _ctrl2.dispose();
-    _ctrl3.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        _ParticleOrb(
-          animation: _ctrl1,
-          size: 280,
-          left: -80,
-          top: -60,
-          color: widget.color,
-        ),
-        _ParticleOrb(
-          animation: _ctrl2,
-          size: 220,
-          right: -50,
-          top: 80,
-          color: widget.color.withValues(alpha: 0.8),
-        ),
-        _ParticleOrb(
-          animation: _ctrl3,
-          size: 200,
-          left: -30,
-          bottom: 100,
-          color: widget.color.withValues(alpha: 0.6),
-        ),
-      ],
-    );
-  }
-}
-
-class _ParticleOrb extends StatelessWidget {
-  const _ParticleOrb({
-    required this.animation,
-    required this.size,
-    this.left,
-    this.right,
-    this.top,
-    this.bottom,
-    required this.color,
-  });
-
-  final AnimationController animation;
-  final double size;
-  final double? left;
-  final double? right;
-  final double? top;
-  final double? bottom;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: left,
-      right: right,
-      top: top,
-      bottom: bottom,
-      child: AnimatedBuilder(
-        animation: animation,
-        builder: (context, child) => Transform.scale(
-          scale: 0.7 + (animation.value * 0.35),
-          child: Opacity(
-            opacity: 0.15 + (0.1 * (1 - (animation.value - 0.5).abs() * 2)),
-            child: child,
-          ),
-        ),
-        child: Container(
-          width: size,
-          height: size,
+        // Dark gradient overlay
+        Container(
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.0, 0.4, 1.0],
               colors: [
-                color.withValues(alpha: 0.30),
-                Colors.transparent,
+                 Colors.black.withValues(alpha: 0.05),
+                 Colors.black.withValues(alpha: 0.3),
+                 Colors.black.withValues(alpha: 0.90),
               ],
             ),
           ),
+        ),
+
+        SafeArea(
+          child: Column(
+            children: [
+              // Progress bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _ProgressBar(
+                  currentIndex: slideIndex,
+                  total: totalPhotoSlides + 1, // +1 for splash
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Skip button
+              if (!isLast)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: GestureDetector(
+                      onTap: onSkip,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 9),
+                        decoration: BoxDecoration(
+                           color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                             color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: const Text(
+                          'Lewati',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              const Spacer(),
+
+              // Bottom content
+              _AnimatedSlideContent(
+                animation: contentAnim,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Swipe hint
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.swipe,
+                            size: 14,
+                             color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Geser untuk lanjut',
+                            style: TextStyle(
+                               color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Icon + dots row
+                      Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                               color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                 color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Icon(data.icon,
+                                color: Colors.white, size: 26),
+                          ),
+                          const SizedBox(width: 16),
+                          _PhotoDots(
+                            total: totalPhotoSlides,
+                            current: slideIndex - 1,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // Tag label
+                      Text(
+                        data.tag.toUpperCase(),
+                        style: TextStyle(
+                           color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Description
+                      Text(
+                        data.description,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          height: 1.45,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Action button
+                      _GreenButton(
+                        label: isLast ? 'Mulai Sekarang 🚀' : 'Get Started',
+                        onTap: isLast ? onFinish : onNext,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Progress bar (thin top bar) ─────────────────────────────────────────────
+class _ProgressBar extends StatelessWidget {
+  const _ProgressBar({required this.currentIndex, required this.total});
+  final int currentIndex;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(2),
+      child: LinearProgressIndicator(
+        value: currentIndex / (total - 1),
+        minHeight: 3,
+         backgroundColor: Colors.white.withValues(alpha: 0.18),
+        valueColor: AlwaysStoppedAnimation<Color>(
+          Colors.white.withValues(alpha: 0.85),
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Image Asset Widget with Better Error Handling
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _ImageAssetWidget extends StatelessWidget {
-  const _ImageAssetWidget({
-    required this.imagePath,
-    required this.fallbackColor,
-  });
-
-  final String imagePath;
-  final Color fallbackColor;
+// ─── Photo slide dots ─────────────────────────────────────────────────────────
+class _PhotoDots extends StatelessWidget {
+  const _PhotoDots({required this.total, required this.current});
+  final int total;
+  final int current;
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      imagePath,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: double.infinity,
-      errorBuilder: (context, error, stackTrace) {
-        debugPrint('❌ Image failed to load: $imagePath');
-        debugPrint('Error: $error');
-        return Container(
+    return Row(
+      children: List.generate(total, (i) {
+        final active = i == current;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.only(right: 6),
+          width: active ? 28 : 8,
+          height: 8,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                fallbackColor.withValues(alpha: 0.6),
-                fallbackColor,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+             color: active ? Colors.white : Colors.white.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                       color: Colors.white.withValues(alpha: 0.5),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
           ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.image_not_supported_outlined,
-                  color: Colors.white.withValues(alpha: 0.30),
-                  size: 64,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Gambar tidak ditemukan',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.40),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
+        );
+      }),
+    );
+  }
+}
+
+// ─── Animated content wrapper ─────────────────────────────────────────────────
+class _AnimatedSlideContent extends StatelessWidget {
+  const _AnimatedSlideContent({
+    required this.animation,
+    required this.child,
+  });
+  final AnimationController animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (_, __) {
+        final t = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic).value;
+        return Opacity(
+          opacity: t.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, 28 * (1 - t)),
+            child: child,
           ),
         );
       },
@@ -773,3 +717,81 @@ class _ImageAssetWidget extends StatelessWidget {
   }
 }
 
+// ─── Green CTA button with ripple ────────────────────────────────────────────
+class _GreenButton extends StatefulWidget {
+  const _GreenButton({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_GreenButton> createState() => _GreenButtonState();
+}
+
+class _GreenButtonState extends State<_GreenButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pressAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      lowerBound: 0.96,
+      upperBound: 1.0,
+      value: 1.0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressAnim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _pressAnim,
+      child: GestureDetector(
+        onTapDown: (_) => _pressAnim.reverse(),
+        onTapUp: (_) {
+          _pressAnim.forward();
+          widget.onTap();
+        },
+        onTapCancel: () => _pressAnim.forward(),
+        child: Container(
+          height: 56,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                 color: AppColors.primary.withValues(alpha: 0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                 color: AppColors.primary.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              widget.label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
@@ -156,7 +157,7 @@ class _OperatorMonitoringPageState
             );
           },
           loading: () => const AppLoading(),
-          error: (error, _) => AppErrorState(message: error.toString()),
+          error: (error, _) => AppErrorState(message: ApiException.fromObject(error).message),
         ),
       ),
     );

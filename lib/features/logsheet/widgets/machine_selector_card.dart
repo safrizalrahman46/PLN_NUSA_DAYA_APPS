@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_picker_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/section_title.dart';
+import '../../../data/models/app_enums.dart';
 import '../../../data/models/machine_model.dart';
 import '../../../data/models/unit_model.dart';
 
@@ -16,19 +17,23 @@ class MachineSelectorCard extends ConsumerWidget {
     required this.operatorName,
     required this.selectedUnit,
     required this.selectedMachine,
+    required this.machineStatus,
     required this.units,
     required this.machines,
     required this.onUnitChanged,
     required this.onMachineChanged,
+    required this.onMachineStatusChanged,
   });
 
   final String operatorName;
   final UnitModel? selectedUnit;
   final MachineModel? selectedMachine;
+  final MachineStatus? machineStatus;
   final List<UnitModel> units;
   final AsyncValue<List<MachineModel>> machines;
   final ValueChanged<UnitModel?> onUnitChanged;
   final ValueChanged<MachineModel?> onMachineChanged;
+  final ValueChanged<MachineStatus> onMachineStatusChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,7 +66,7 @@ class MachineSelectorCard extends ConsumerWidget {
               const Expanded(
                 child: SectionTitle(
                   title: 'Informasi Unit',
-                  subtitle: 'Pilih unit dan serial number mesin',
+                  subtitle: 'Pilih unit, mesin, dan status operasi',
                 ),
               ),
             ],
@@ -87,25 +92,92 @@ class MachineSelectorCard extends ConsumerWidget {
           machines.when(
             data: (items) => AppPickerField<MachineModel>(
               value: selectedMachine,
-              label: 'Serial Number Mesin',
+              label: 'Mesin PLTD',
               hint: items.isEmpty
                   ? 'Belum ada mesin untuk unit ini'
-                  : 'Pilih serial number mesin',
+                  : 'Pilih nama mesin dari master PLTD',
               options: items
                   .map(
                     (item) => PickerOption<MachineModel>(
                       value: item,
-                      label: item.serialNumber,
-                      subtitle: '${item.capacity} • ${item.status}',
+                      label: item.displayLabel,
+                      subtitle: item.masterInfoLine.isEmpty
+                          ? item.displaySubtitle
+                          : '${item.displaySubtitle} • ${item.masterInfoLine}',
                     ),
                   )
                   .toList(),
               onSelected: (value) => onMachineChanged(value),
-              searchHint: 'Cari serial number mesin',
+              searchHint: 'Cari nama mesin, merk, tipe, atau no seri',
             ),
             loading: () => const LinearProgressIndicator(),
             error: (_, __) => const Text('Gagal memuat mesin'),
           ),
+          const SizedBox(height: 12),
+          AppPickerField<MachineStatus>(
+            value: machineStatus,
+            label: 'Status Mesin',
+            hint: 'Status awal mengikuti master, tetap bisa diubah',
+            options: MachineStatus.values
+                .map(
+                  (status) => PickerOption<MachineStatus>(
+                    value: status,
+                    label: status.label,
+                    subtitle: switch (status) {
+                      MachineStatus.operasi =>
+                        'Mesin beroperasi normal saat pelaporan',
+                      MachineStatus.standby =>
+                        'Mesin siaga dan tidak sedang dibebani',
+                      MachineStatus.gangguanRusak =>
+                        'Mesin gangguan/rusak, parameter numerik otomatis 0',
+                    },
+                  ),
+                )
+                .toList(),
+            onSelected: onMachineStatusChanged,
+            searchHint: 'Cari status mesin',
+          ),
+          if (selectedMachine != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    selectedMachine!.displayLabel,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (selectedMachine!.displaySubtitle.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      selectedMachine!.displaySubtitle,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  if (selectedMachine!.masterInfoLine.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      selectedMachine!.masterInfoLine,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSoft,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
           machines.when(
             data: (items) {
               if (items.isEmpty) {
@@ -127,7 +199,7 @@ class MachineSelectorCard extends ConsumerWidget {
                       children: items
                           .map(
                             (item) => ChoiceChip(
-                              label: Text(item.serialNumber.split('-').last),
+                              label: Text(item.shortLabel),
                               selected: selectedMachine?.id == item.id,
                               onSelected: (_) {
                                 onMachineChanged(item);

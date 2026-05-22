@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:intl/intl.dart';
 
 import '../models/app_enums.dart';
@@ -5,214 +7,168 @@ import '../models/logsheet_model.dart';
 import '../models/machine_model.dart';
 import '../models/unit_model.dart';
 import '../models/user_model.dart';
+import 'master_machine_data.dart';
 
 class DummyData {
   DummyData._();
 
-  static final List<
-    ({String name, String locationName, double latitude, double longitude})
-  >
-  _fixedUnitSeeds = [
-    (
-      name: 'PLTD KRAYAN',
-      locationName: 'Krayan, Kalimantan Utara',
-      latitude: 3.8742,
-      longitude: 115.7312,
-    ),
-    (
-      name: 'PLTD TANAH MERAH',
-      locationName: 'Tanah Merah, Kalimantan Utara',
-      latitude: 2.8227,
-      longitude: 117.3748,
-    ),
-    (
-      name: 'PLTD SEI MENGGARIS',
-      locationName: 'Sei Menggaris, Kalimantan Utara',
-      latitude: 3.5009,
-      longitude: 117.2411,
-    ),
-    (
-      name: 'PLTD LONG PESO',
-      locationName: 'Long Peso, Kalimantan Utara',
-      latitude: 2.9343,
-      longitude: 116.7941,
-    ),
-    (
-      name: 'PLTD LONG LAYU',
-      locationName: 'Long Layu, Kalimantan Utara',
-      latitude: 3.5739,
-      longitude: 115.7298,
-    ),
-    (
-      name: 'PLTD PA UPAN',
-      locationName: 'Pa Upan, Kalimantan Utara',
-      latitude: 3.9113,
-      longitude: 115.5524,
-    ),
-  ];
+  static const _knownUnitCoordinates =
+      <String, ({double latitude, double longitude, String locationName})>{
+        'PLTD KRAYAN': (
+          latitude: 3.8742,
+          longitude: 115.7312,
+          locationName: 'Krayan, Kalimantan Utara',
+        ),
+        'PLTD TANAH MERAH': (
+          latitude: 2.8227,
+          longitude: 117.3748,
+          locationName: 'Tanah Merah, Kalimantan Utara',
+        ),
+        'PLTD SEI MENGGARIS': (
+          latitude: 3.5009,
+          longitude: 117.2411,
+          locationName: 'Sei Menggaris, Kalimantan Utara',
+        ),
+        'PLTD LONG PESO': (
+          latitude: 2.9343,
+          longitude: 116.7941,
+          locationName: 'Long Peso, Kalimantan Utara',
+        ),
+        'PLTD LONG LAYU': (
+          latitude: 3.5739,
+          longitude: 115.7298,
+          locationName: 'Long Layu, Kalimantan Utara',
+        ),
+        'PLTD PA UPAN': (
+          latitude: 3.9113,
+          longitude: 115.5524,
+          locationName: 'Pa Upan, Kalimantan Utara',
+        ),
+      };
 
-  static final List<String> _generatedUnitNames = [
-    'PLTD BATU AMPAR',
-    'PLTD BIDUK-BIDUK',
-    'PLTD DATAH BILANG',
-    'PLTD KAYAN HULU',
-    'PLTD LONG BAGUN',
-    'PLTD LONG APARI',
-    'PLTD MARATUA',
-    'PLTD MUARA WAHAU',
-    'PLTD SANGKULIRANG',
-    'PLTD TELUK PANDAN',
-    'PLTD SANDARAN',
-    'PLTD MUARA BENGKAL',
-    'PLTD MUARA ANCALONG',
-    'PLTD MUARA KAMAN',
-    'PLTD KONGEB',
-    'PLTD TABANG',
-    'PLTD TULIN ONSOI',
-    'PLTD MENTARANG',
-    'PLTD MALINAU KOTA',
-    'PLTD SESAYAP',
-    'PLTD SEBATIK',
-    'PLTD NUNUKAN',
-    'PLTD TANJUNG SELOR',
-    'PLTD TARAKAN',
-    'PLTD SAMARINDA HULU',
-    'PLTD BONTANG KUALA',
-    'PLTD BERAU PESISIR',
-    'PLTD PASER UTARA',
-    'PLTD PENAJAM',
-    'PLTD KUTAI BARAT',
-    'PLTD KUTAI TIMUR',
-    'PLTD MAHAKAM ULU',
-    'PLTD LONG IRAM',
-    'PLTD MUARA PAHU',
-  ];
-
-  static final List<UnitModel> units = [
-    ...List<UnitModel>.generate(_fixedUnitSeeds.length, (index) {
-      final seed = _fixedUnitSeeds[index];
+  static final List<UnitModel> units = List<UnitModel>.generate(
+    unitMasterSeeds.length,
+    (index) {
+      final seed = unitMasterSeeds[index];
+      final known = _knownUnitCoordinates[seed.unitName];
       return UnitModel(
         id: 'U${(index + 1).toString().padLeft(2, '0')}',
-        name: seed.name,
-        locationName: seed.locationName,
-        latitude: seed.latitude,
-        longitude: seed.longitude,
-        radiusMeter: 250 + ((index % 3) * 25),
-        status: 'active',
-      );
-    }),
-    ...List<UnitModel>.generate(_generatedUnitNames.length, (index) {
-      final overallIndex = index + _fixedUnitSeeds.length;
-      final latitude = 0.45 + ((overallIndex % 8) * 0.42);
-      final longitude = 116.05 + ((overallIndex % 10) * 0.23);
-      final region = overallIndex.isEven
-          ? 'Kalimantan Timur'
-          : 'Kalimantan Utara';
-      return UnitModel(
-        id: 'U${(overallIndex + 1).toString().padLeft(2, '0')}',
-        name: _generatedUnitNames[index],
+        name: seed.unitName,
         locationName:
-            '${_generatedUnitNames[index].replaceFirst('PLTD ', '')}, $region',
-        latitude: latitude,
-        longitude: longitude,
-        radiusMeter: 225 + ((overallIndex % 4) * 25),
+            known?.locationName ??
+            (seed.unitName == 'UP3 SAMARINDA'
+                ? 'UP3 Samarinda - PLTD mobile'
+                : 'UP3 ${seed.up3}'),
+        latitude: known?.latitude ?? _generatedLatitude(index),
+        longitude: known?.longitude ?? _generatedLongitude(index),
+        radiusMeter: 225 + ((index % 4) * 25),
         status: 'active',
       );
-    }),
-  ];
+    },
+  );
+
+  static final Map<String, String> _unitIdByName = {
+    for (final unit in units) unit.name: unit.id,
+  };
 
   static final List<MachineModel> machines = List<MachineModel>.generate(
-    units.length * 5,
+    machineMasterSeeds.length,
     (index) {
-      final unit = units[index ~/ 5];
-      final unitIndex = index ~/ 5;
-      final machineNo = (index % 5) + 1;
-      final brand = _machineBrandFor(machineNo);
+      final seed = machineMasterSeeds[index];
       return MachineModel(
         id: 'M${(index + 1).toString().padLeft(3, '0')}',
-        unitId: unit.id,
-        serialNumber:
-            '$brand-${unit.id}-SN${machineNo.toString().padLeft(2, '0')}',
-        capacity: _machineCapacityFor(unitIndex, machineNo),
-        status: machineNo == 5 && unitIndex.isOdd ? 'standby' : 'active',
+        unitId: _requiredUnitId(seed.unitName),
+        up3: seed.up3,
+        machineName: seed.machineName,
+        brand: seed.brand,
+        machineType: seed.machineType,
+        serialNumber: seed.serialNumber,
+        generatorCode: seed.generatorCode,
+        ownershipStatus: seed.ownershipStatus,
+        performanceLabel: seed.performanceLabel,
+        capacity: seed.capacity,
+        availableCapacity: seed.availableCapacity,
+        dispatchCapacity: seed.dispatchCapacity,
+        status: parseMachineStatus(seed.conditionLabel).apiValue,
+        conditionLabel: seed.conditionLabel,
       );
     },
   );
 
   static final List<UserModel> users = [
-    const UserModel(
+    UserModel(
       id: 'OP1',
       name: 'Rahman Safrizal',
       username: 'operator',
       role: UserRole.operator,
-      unitId: 'U01',
+      unitId: _requiredUnitId('PLTD KRAYAN'),
       unitName: 'PLTD KRAYAN',
       token: 'token-operator',
     ),
-    const UserModel(
+    UserModel(
       id: 'OP2',
       name: 'Operator Krayan',
       username: 'operator.krayan',
       role: UserRole.operator,
-      unitId: 'U01',
+      unitId: _requiredUnitId('PLTD KRAYAN'),
       unitName: 'PLTD KRAYAN',
       token: 'token-operator-krayan',
     ),
-    const UserModel(
+    UserModel(
       id: 'OP3',
       name: 'Operator Tanah Merah',
       username: 'operator.tanahmerah',
       role: UserRole.operator,
-      unitId: 'U02',
+      unitId: _requiredUnitId('PLTD TANAH MERAH'),
       unitName: 'PLTD TANAH MERAH',
       token: 'token-operator-tmr',
     ),
-    const UserModel(
+    UserModel(
       id: 'OP4',
       name: 'Operator Long Peso',
       username: 'operator.longpeso',
       role: UserRole.operator,
-      unitId: 'U04',
+      unitId: _requiredUnitId('PLTD LONG PESO'),
       unitName: 'PLTD LONG PESO',
       token: 'token-operator-longpeso',
     ),
-    const UserModel(
+    UserModel(
       id: 'OP5',
       name: 'Operator Long Layu',
       username: 'operator.longlayu',
       role: UserRole.operator,
-      unitId: 'U05',
+      unitId: _requiredUnitId('PLTD LONG LAYU'),
       unitName: 'PLTD LONG LAYU',
       token: 'token-operator-longlayu',
     ),
-    const UserModel(
+    UserModel(
       id: 'OP6',
       name: 'Operator Site 07',
       username: 'operator.site07',
       role: UserRole.operator,
-      unitId: 'U07',
+      unitId: _requiredUnitId('PLTD BATU AMPAR'),
       unitName: 'PLTD BATU AMPAR',
       token: 'token-operator-site07',
     ),
-    const UserModel(
+    UserModel(
       id: 'SP1',
       name: 'Teddy',
       username: 'supervisor',
       role: UserRole.supervisor,
-      unitId: 'U02',
+      unitId: _requiredUnitId('PLTD TANAH MERAH'),
       unitName: 'PLTD TANAH MERAH',
       token: 'token-supervisor',
     ),
-    const UserModel(
+    UserModel(
       id: 'AD1',
       name: 'Admin AMC OPKIT UP KAL 3',
       username: 'admin',
       role: UserRole.admin,
-      unitId: 'U03',
+      unitId: _requiredUnitId('PLTD SEI MENGGARIS'),
       unitName: 'PLTD SEI MENGGARIS',
       token: 'token-admin',
     ),
-    const UserModel(
+    UserModel(
       id: 'SA1',
       name: 'Superadmin PLN Nusa Daya',
       username: 'superadmin',
@@ -239,7 +195,7 @@ class DummyData {
 
   static String generateProofId(DateTime time) {
     final formatter = DateFormat('yyMMddHHmm');
-    return 'PLTD-${formatter.format(time)}-${time.millisecond.toString().padLeft(3, '0')}';
+    return 'NP-PLTD-${formatter.format(time)}-${time.millisecond.toString().padLeft(3, '0')}';
   }
 
   static List<LogsheetModel> seedLogsheets() {
@@ -250,17 +206,39 @@ class DummyData {
       final unit = units[index % units.length];
       final machineList = machinesByUnit(unit.id);
       final machine = machineList[index % machineList.length];
-      final operator = operatorUsers[(index ~/ 4) % operatorUsers.length];
+      final matchingOperators = operatorUsers
+          .where((item) => item.unitName == unit.name)
+          .toList();
+      final operator = matchingOperators.isNotEmpty
+          ? matchingOperators[index % matchingOperators.length]
+          : operatorUsers[(index ~/ 4) % operatorUsers.length];
       final submittedAt = now.subtract(
         Duration(days: index ~/ 24, hours: index % 24),
       );
-      final frequency = 49.35 + ((index % 7) * 0.21);
-      final tegangan = index % 19 == 0 ? 0 : 380 + ((index * 3) % 36);
+      final machineStatus = parseMachineStatus(machine.conditionLabel);
+      final isGangguan = machineStatus == MachineStatus.gangguanRusak;
+      final capacityKw = _parseCapacityKw(machine.capacity);
+      final double frequency = isGangguan
+          ? 0
+          : machineStatus == MachineStatus.standby
+          ? 49.65 + ((index % 4) * 0.08)
+          : 49.82 + ((index % 5) * 0.07);
+      final double tegangan = isGangguan
+          ? 0
+          : machineStatus == MachineStatus.standby
+          ? 360 + ((index * 2) % 16)
+          : 380 + ((index * 3) % 36);
+      final double bebanMesin = isGangguan
+          ? 0
+          : machineStatus == MachineStatus.standby
+          ? _standbyLoad(capacityKw, index)
+          : _operatingLoad(capacityKw, index);
       final abnormal =
+          isGangguan ||
           frequency > 50.5 ||
-          frequency < 49.5 ||
+          frequency < 49.4 ||
           tegangan == 0 ||
-          index % 13 == 0;
+          index % 19 == 0;
       final reportStatus = abnormal
           ? ReportStatus.abnormal
           : (index % 8 == 0 ? ReportStatus.late : ReportStatus.onTime);
@@ -284,20 +262,58 @@ class DummyData {
         unitId: unit.id,
         unitName: unit.name,
         machineId: machine.id,
+        machineUp3: machine.up3,
+        machineName: machine.machineName,
+        machineBrand: machine.brand,
+        machineType: machine.machineType,
         serialNumber: machine.serialNumber,
-        bebanMesin: 650 + ((index * 17) % 980),
-        standKwh: 10000 + (index * 143),
-        standBbm: 1800 + (index * 21),
-        tekananOli: 2.2 + ((index % 6) * 0.35),
-        temperaturAir: 72 + ((index % 8) * 3),
-        phasaR: (175 + (index % 30)).toDouble(),
-        phasaS: (173 + (index % 28)).toDouble(),
-        phasaT: (171 + (index % 26)).toDouble(),
+        machineGeneratorCode: machine.generatorCode,
+        machineOwnershipStatus: machine.ownershipStatus,
+        machinePerformanceLabel: machine.performanceLabel,
+        machineInstalledCapacity: machine.capacity,
+        machineAvailableCapacity: machine.availableCapacity,
+        machineDispatchCapacity: machine.dispatchCapacity,
+        machineConditionLabel: machine.conditionLabel,
+        machineStatus: machineStatus,
+        bebanMesin: bebanMesin,
+        standKwh: isGangguan ? 0 : 10000 + (index * 143),
+        standBbm: isGangguan ? 0 : 1800 + (index * 21),
+        tekananOli: isGangguan
+            ? 0
+            : machineStatus == MachineStatus.standby
+            ? 1.4 + ((index % 5) * 0.18)
+            : 2.2 + ((index % 6) * 0.35),
+        temperaturAir: isGangguan
+            ? 0
+            : machineStatus == MachineStatus.standby
+            ? 48 + ((index % 4) * 2)
+            : 72 + ((index % 8) * 3),
+        phasaR: isGangguan
+            ? 0
+            : machineStatus == MachineStatus.standby
+            ? (148 + (index % 12)).toDouble()
+            : (175 + (index % 30)).toDouble(),
+        phasaS: isGangguan
+            ? 0
+            : machineStatus == MachineStatus.standby
+            ? (146 + (index % 12)).toDouble()
+            : (173 + (index % 28)).toDouble(),
+        phasaT: isGangguan
+            ? 0
+            : machineStatus == MachineStatus.standby
+            ? (145 + (index % 12)).toDouble()
+            : (171 + (index % 26)).toDouble(),
         tegangan: tegangan.toDouble(),
-        cosPhi: 0.78 + ((index % 5) * 0.04),
+        cosPhi: isGangguan
+            ? 0
+            : machineStatus == MachineStatus.standby
+            ? 0.52 + ((index % 4) * 0.04)
+            : 0.78 + ((index % 5) * 0.04),
         frequency: frequency,
-        notes: abnormal
-            ? 'Perlu pengecekan parameter dan koordinasi ke supervisor.'
+        notes: isGangguan
+            ? 'Mesin mengalami gangguan/rusak dan menunggu tindak lanjut tim site.'
+            : machineStatus == MachineStatus.standby
+            ? 'Mesin standby sesuai master data pembangkit dan siap dioperasikan bila diperlukan.'
             : 'Operasi berjalan normal sesuai jadwal laporan.',
         selfiePhotoPath: '',
         machinePhotoPath: '',
@@ -317,13 +333,17 @@ class DummyData {
         submittedAt: submittedAt,
         syncStatus: syncStatus,
         reportStatus: reportStatus,
-        abnormalNotes: abnormal
+        abnormalNotes: isGangguan
+            ? 'Status mesin Gangguan-Rusak. Parameter numerik otomatis tercatat 0.'
+            : abnormal
             ? 'Frekuensi/tegangan atau indikator operasi berada di luar batas aman.'
             : '',
         createdAt: submittedAt,
         updatedAt: submittedAt,
-        fieldCondition: abnormal
-            ? 'Perlu observasi lanjutan dan pengecekan site.'
+        fieldCondition: isGangguan
+            ? 'Unit perlu penanganan gangguan dan inspeksi lanjutan.'
+            : machineStatus == MachineStatus.standby
+            ? 'Mesin standby dan siap operasi sesuai kebutuhan sistem.'
             : 'Aman terkendali.',
         syncErrorMessage: syncStatus == SyncStatus.failed
             ? 'Koneksi API timeout saat sinkronisasi.'
@@ -379,7 +399,7 @@ class DummyData {
       {
         'title': 'GPS di luar area',
         'description':
-            'Satu laporan dari PLTD LONG BAGUN terdeteksi di luar radius lokasi unit.',
+            'Satu laporan dari PLTD LONG APARI terdeteksi di luar radius lokasi unit.',
         'time': now.subtract(const Duration(hours: 1, minutes: 15)),
         'priority': 'sedang',
         'read': false,
@@ -397,13 +417,41 @@ class DummyData {
     ];
   }
 
-  static String _machineBrandFor(int machineNo) {
-    const brands = ['CAT3516', 'MTU16V', 'CUMMINS', 'YANMAR', 'PERKINS'];
-    return brands[(machineNo - 1) % brands.length];
+  static String _requiredUnitId(String unitName) {
+    final unitId = _unitIdByName[unitName];
+    if (unitId == null) {
+      throw StateError('Unit master tidak ditemukan untuk $unitName');
+    }
+    return unitId;
   }
 
-  static String _machineCapacityFor(int unitIndex, int machineNo) {
-    const capacities = ['800 kW', '900 kW', '1.2 MW', '1.5 MW', '2.0 MW'];
-    return capacities[(unitIndex + machineNo - 1) % capacities.length];
+  static double _generatedLatitude(int index) =>
+      0.55 + ((index % 9) * 0.34) + ((index ~/ 9) * 0.06);
+
+  static double _generatedLongitude(int index) =>
+      115.85 + ((index % 8) * 0.24) + ((index ~/ 8) * 0.08);
+
+  static double _parseCapacityKw(String capacity) {
+    final numeric = capacity.replaceAll(RegExp(r'[^0-9]'), '');
+    if (numeric.isEmpty) {
+      return 100;
+    }
+    return double.tryParse(numeric) ?? 100;
+  }
+
+  static double _operatingLoad(double capacityKw, int index) {
+    final baseLoad = capacityKw * 0.74;
+    final variation = math.max(capacityKw * 0.06, 4);
+    return double.parse(
+      (baseLoad + ((index % 5) * variation * 0.35)).toStringAsFixed(2),
+    );
+  }
+
+  static double _standbyLoad(double capacityKw, int index) {
+    final baseLoad = capacityKw * 0.22;
+    final variation = math.max(capacityKw * 0.04, 3);
+    return double.parse(
+      (baseLoad + ((index % 4) * variation * 0.28)).toStringAsFixed(2),
+    );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../core/network/api_exception.dart';
 import '../dummy/dummy_data.dart';
-import '../models/app_enums.dart';
 import '../models/logsheet_model.dart';
 
 class LogsheetApi {
@@ -14,17 +14,10 @@ class LogsheetApi {
       final response = await _dio.post('/logsheets', data: logsheet.toJson());
       final data = response.data['data'] ?? response.data;
       return LogsheetModel.fromJson(Map<String, dynamic>.from(data));
-    } on DioException {
-      final now = DateTime.now();
-      return logsheet.copyWith(
-        id: logsheet.id.isEmpty ? 'remote-${logsheet.localId}' : logsheet.id,
-        proofId: logsheet.proofId.isEmpty
-            ? DummyData.generateProofId(now)
-            : logsheet.proofId,
-        syncStatus: SyncStatus.synced,
-        submittedAt: now,
-        updatedAt: now,
-        syncErrorMessage: null,
+    } on DioException catch (error) {
+      throw ApiException.fromDioException(
+        error,
+        fallbackMessage: 'Gagal mengirim logsheet ke server.',
       );
     }
   }
@@ -34,7 +27,7 @@ class LogsheetApi {
       await _dio.post('/logsheets/$logsheetId/upload-media');
       return true;
     } on DioException {
-      return true;
+      return false;
     }
   }
 

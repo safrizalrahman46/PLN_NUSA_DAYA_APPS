@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
-        android:label="PLN Nusa Daya PLTD Logsheet"
+        android:label="PLN NP PLTD Logsheet"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">

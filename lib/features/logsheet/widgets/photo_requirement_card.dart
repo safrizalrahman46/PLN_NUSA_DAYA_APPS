@@ -14,12 +14,16 @@ class PhotoRequirementCard extends StatelessWidget {
     required this.machinePhotoPath,
     required this.onCaptureSelfie,
     required this.onCaptureMachine,
+    this.selfieNote,
+    this.machineNote,
   });
 
   final String selfiePath;
   final String machinePhotoPath;
   final VoidCallback onCaptureSelfie;
   final VoidCallback onCaptureMachine;
+  final String? selfieNote;
+  final String? machineNote;
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +55,8 @@ class PhotoRequirementCard extends StatelessWidget {
               const SizedBox(width: 12),
               const Expanded(
                 child: SectionTitle(
-                  title: 'Foto Bukti',
-                  subtitle: 'Selfie operator dan foto mesin wajib diambil',
+                  title: 'Absen Petugas & Foto Mesin',
+                  subtitle: 'Absen petugas dan foto mesin wajib diambil',
                 ),
               ),
             ],
@@ -61,26 +65,29 @@ class PhotoRequirementCard extends StatelessWidget {
           narrow
               ? Column(
                   children: [
-                    _PhotoBox(
-                      title: 'Selfie Operator',
-                      path: selfiePath,
-                      onTap: onCaptureSelfie,
-                    ),
-                    const SizedBox(height: 12),
-                    _PhotoBox(
-                      title: 'Foto Mesin',
-                      path: machinePhotoPath,
-                      onTap: onCaptureMachine,
-                    ),
-                  ],
-                )
+                     _PhotoBox(
+                       title: 'Absen Petugas',
+                       path: selfiePath,
+                       onTap: onCaptureSelfie,
+                       note: selfieNote,
+                     ),
+                     const SizedBox(height: 12),
+                     _PhotoBox(
+                       title: 'Foto Mesin',
+                       path: machinePhotoPath,
+                       onTap: onCaptureMachine,
+                       note: machineNote,
+                     ),
+                   ],
+                 )
               : Row(
                   children: [
                     Expanded(
                       child: _PhotoBox(
-                        title: 'Selfie Operator',
+                        title: 'Absen Petugas',
                         path: selfiePath,
                         onTap: onCaptureSelfie,
+                        note: selfieNote,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -89,6 +96,7 @@ class PhotoRequirementCard extends StatelessWidget {
                         title: 'Foto Mesin',
                         path: machinePhotoPath,
                         onTap: onCaptureMachine,
+                        note: machineNote,
                       ),
                     ),
                   ],
@@ -104,11 +112,13 @@ class _PhotoBox extends StatelessWidget {
     required this.title,
     required this.path,
     required this.onTap,
+    this.note,
   });
 
   final String title;
   final String path;
   final VoidCallback onTap;
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +131,16 @@ class _PhotoBox extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.titleMedium),
+          if (note != null && note!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              note!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSoft,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
           const SizedBox(height: 10),
           AspectRatio(
             aspectRatio: 1.2,

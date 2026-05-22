@@ -6,6 +6,7 @@ import '../../core/widgets/floating_pill_nav.dart';
 import '../history/history_page.dart';
 import '../logsheet/input_logsheet_page.dart';
 import '../profile/profile_page.dart';
+import '../reports/report_page.dart';
 import '../sync/pending_upload_page.dart';
 import 'operator_dashboard_page.dart';
 
@@ -23,6 +24,7 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
     OperatorDashboardPage(),
     HistoryPage(),
     PendingUploadPage(),
+    ReportPage(),
     ProfilePage(),
   ];
 
@@ -41,6 +43,11 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
       icon: Icons.cloud_upload_outlined,
       activeIcon: Icons.cloud_upload_rounded,
       label: 'Pending',
+    ),
+    FloatingPillNavItem(
+      icon: Icons.bar_chart_outlined,
+      activeIcon: Icons.bar_chart_rounded,
+      label: 'Laporan',
     ),
     FloatingPillNavItem(
       icon: Icons.person_outline_rounded,
@@ -63,12 +70,12 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
               labelType: NavigationRailLabelType.all,
               leading: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: FloatingActionButton.extended(
+                child: FloatingActionButton(
                   onPressed: _openInput,
-                  icon: const Icon(Icons.edit_note_rounded),
-                  label: const Text('Input'),
+                  tooltip: 'Input Logsheet',
                   backgroundColor: AppColors.highlight,
                   foregroundColor: AppColors.primaryDark,
+                  child: const Icon(Icons.add_rounded),
                 ),
               ),
               destinations: const [
@@ -83,6 +90,10 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
                 NavigationRailDestination(
                   icon: Icon(Icons.cloud_upload_rounded),
                   label: Text('Pending'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.bar_chart_rounded),
+                  label: Text('Laporan'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.person_rounded),
@@ -120,18 +131,13 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
           Positioned(
             bottom: bottomInset + 16 + 68 + 10,
             right: 20,
-            child: FloatingActionButton.extended(
+            child: FloatingActionButton.small(
               onPressed: _openInput,
-              icon: const Icon(Icons.edit_note_rounded, size: 20),
-              label: const Text(
-                'Input',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-              ),
+              tooltip: 'Input Logsheet',
               backgroundColor: AppColors.highlight,
               foregroundColor: AppColors.primaryDark,
               elevation: 4,
-              extendedPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              child: const Icon(Icons.add_rounded, size: 22),
             ),
           ),
         ],

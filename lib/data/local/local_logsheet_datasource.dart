@@ -32,6 +32,7 @@ class LocalLogsheetDatasource {
     final all = await fetchAll();
     return all.where((item) {
       return item.syncStatus == SyncStatus.pendingSync ||
+          item.syncStatus == SyncStatus.pendingEdit ||
           item.syncStatus == SyncStatus.failed ||
           item.syncStatus == SyncStatus.draft;
     }).toList();
@@ -43,5 +44,9 @@ class LocalLogsheetDatasource {
       return LogsheetModel.fromJson(Map<String, dynamic>.from(raw));
     }
     return null;
+  }
+
+  Future<void> delete(String localId) async {
+    await _hiveService.logsheetBox.delete(localId);
   }
 }

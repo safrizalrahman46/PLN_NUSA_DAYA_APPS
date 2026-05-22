@@ -10,10 +10,12 @@ class NextReportCard extends StatelessWidget {
     super.key,
     required this.nextReportAt,
     required this.countdownText,
+    required this.onReadyInput,
   });
 
   final DateTime nextReportAt;
   final String countdownText;
+  final VoidCallback onReadyInput;
 
   @override
   Widget build(BuildContext context) {
@@ -160,23 +162,61 @@ class NextReportCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Hitung mundur',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.75),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                margin: const EdgeInsets.only(right: 6),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.auroraCyan,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.auroraCyan
+                                          .withValues(alpha: 0.70),
+                                      blurRadius: 6,
                                     ),
-                          ),
-                          Text(
-                            countdownText,
-                            style: Theme.of(context)
-                                .textTheme
-                                .displaySmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
+                                  ],
                                 ),
+                              ),
+                              Text(
+                                'Hitung mundur',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Colors.white
+                                          .withValues(alpha: 0.80),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          ShaderMask(
+                            shaderCallback: (bounds) =>
+                                const LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Color(0xFF7DD3FC),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                            blendMode: BlendMode.srcIn,
+                            child: Text(
+                              countdownText,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
@@ -184,7 +224,7 @@ class NextReportCard extends StatelessWidget {
                         width: narrow ? double.infinity : 130,
                         child: AppButton(
                           label: 'Siap Input',
-                          onPressed: () {},
+                          onPressed: onReadyInput,
                           type: AppButtonType.glass,
                         ),
                       ),

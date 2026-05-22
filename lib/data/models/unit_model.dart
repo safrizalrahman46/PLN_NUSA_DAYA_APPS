@@ -1,3 +1,5 @@
+import '../../core/utils/number_helper.dart';
+
 class UnitModel {
   const UnitModel({
     required this.id,
@@ -32,9 +34,9 @@ class UnitModel {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       locationName: json['locationName']?.toString() ?? '',
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-      radiusMeter: (json['radiusMeter'] as num?)?.toDouble() ?? 0,
+      latitude: NumberHelper.parseDynamic(json['latitude']),
+      longitude: NumberHelper.parseDynamic(json['longitude']),
+      radiusMeter: NumberHelper.parseDynamic(json['radiusMeter']),
       status: json['status']?.toString() ?? 'active',
     );
   }

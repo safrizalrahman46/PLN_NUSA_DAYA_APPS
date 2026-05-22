@@ -1,19 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/widgets/app_button.dart';
 import '../../core/widgets/glass_card.dart';
+import '../../data/models/logsheet_model.dart';
+import '../../data/repositories/error_log_repository.dart';
+import '../auth/auth_controller.dart';
+import '../profile/settings_controller.dart';
+import 'report_export_service.dart';
 
-class ReportExportPage extends StatelessWidget {
-  const ReportExportPage({super.key});
+class ReportExportPage extends ConsumerWidget {
+  const ReportExportPage({
+    super.key,
+    this.records = const <LogsheetModel>[],
+    this.periodLabel = 'Harian',
+    this.dateRangeLabel = '-',
+    this.exportedBy = 'Supervisor',
+    this.operatorFieldLabel = '',
+  });
+
+  final List<LogsheetModel> records;
+  final String periodLabel;
+  final String dateRangeLabel;
+  final String exportedBy;
+  final String operatorFieldLabel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authControllerProvider).user;
+    final appSettings = ref.watch(appSettingsProvider);
+    final service = ReportExportService();
+    final payload = ReportExportPayload(
+      records: records,
+      periodLabel: periodLabel,
+      exportedBy: user?.name ?? exportedBy,
+      dateRangeLabel: dateRangeLabel,
+      fileNameBase: _fileNameBase(periodLabel),
+      operatorFieldLabel: operatorFieldLabel.isEmpty
+          ? appSettings.operatorFieldLabel
+          : operatorFieldLabel,
+    );
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Export Laporan')),
+      appBar: AppBar(title: const Text('Download Laporan')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-            24, 20, 24, MediaQuery.of(context).padding.bottom + 108),
+          24,
+          20,
+          24,
+          MediaQuery.of(context).padding.bottom + 108,
+        ),
         children: [
           GlassCard(
             child: Column(
@@ -44,11 +81,11 @@ class ReportExportPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Pilih format export',
+                            'Download laporan $periodLabel',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           Text(
-                            'Dummy action untuk tahap awal integrasi.',
+                            '${records.length} data • $dateRangeLabel',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -60,26 +97,51 @@ class ReportExportPage extends StatelessWidget {
                 _ExportOption(
                   icon: Icons.picture_as_pdf_rounded,
                   color: AppColors.danger,
-                  label: 'Export PDF',
-                  subtitle: 'Format PDF siap cetak',
-                  onTap: () => _showInfo(context, 'Export PDF dummy dijalankan.'),
+                  label: 'Download PDF',
+                  subtitle: 'Format PDF siap cetak dengan logo PLN Nusa Daya',
+                  onTap: records.isEmpty
+                      ? null
+                      : () async {
+                          try {
+                            await service.sharePdf(payload);
+                          } catch (error, stackTrace) {
+                            await ref.read(errorLogRepositoryProvider).logException(
+                                  error: error,
+                                  stackTrace: stackTrace,
+                                  page: 'ReportExportPage.sharePdf',
+                                  user: user,
+                                );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Gagal export PDF: $error')),
+                            );
+                          }
+                        },
                 ),
                 const SizedBox(height: 10),
                 _ExportOption(
                   icon: Icons.table_chart_rounded,
                   color: AppColors.success,
-                  label: 'Export Excel',
-                  subtitle: 'Format spreadsheet (.xlsx)',
-                  onTap: () =>
-                      _showInfo(context, 'Export Excel dummy dijalankan.'),
-                ),
-                const SizedBox(height: 10),
-                _ExportOption(
-                  icon: Icons.print_rounded,
-                  color: AppColors.accent,
-                  label: 'Print Langsung',
-                  subtitle: 'Cetak via printer terhubung',
-                  onTap: () => _showInfo(context, 'Print dummy dijalankan.'),
+                  label: 'Download Excel',
+                  subtitle: 'Format spreadsheet (.xlsx) untuk analisis',
+                  onTap: records.isEmpty
+                      ? null
+                      : () async {
+                          try {
+                            await service.shareExcel(payload);
+                          } catch (error, stackTrace) {
+                            await ref.read(errorLogRepositoryProvider).logException(
+                                  error: error,
+                                  stackTrace: stackTrace,
+                                  page: 'ReportExportPage.shareExcel',
+                                  user: user,
+                                );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Gagal export Excel: $error')),
+                            );
+                          }
+                        },
                 ),
               ],
             ),
@@ -89,10 +151,17 @@ class ReportExportPage extends StatelessWidget {
     );
   }
 
-  void _showInfo(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  String _fileNameBase(String period) {
+    final now = DateTime.now();
+    final safePeriod = period.replaceAll(' ', '_');
+    final datePart = switch (period) {
+      'Harian' => DateFormat('yyyy-MM-dd').format(now),
+      'Mingguan' => DateFormat('MMMM_yyyy', 'id_ID').format(now),
+      'Bulanan' => DateFormat('MMMM_yyyy', 'id_ID').format(now),
+      'Tahunan' => DateFormat('yyyy').format(now),
+      _ => DateFormat('yyyy-MM-dd').format(now),
+    };
+    return 'Laporan_PLN_Nusa_Daya_${safePeriod}_$datePart';
   }
 }
 
@@ -109,7 +178,7 @@ class _ExportOption extends StatelessWidget {
   final Color color;
   final String label;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +221,7 @@ class _ExportOption extends StatelessWidget {
           ),
           Icon(
             Icons.chevron_right_rounded,
-            color: AppColors.textSoft,
+            color: onTap == null ? AppColors.border : AppColors.textSoft,
             size: 20,
           ),
         ],

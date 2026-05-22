@@ -6,11 +6,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/constants/app_colors.dart';
 import 'data/local/hive_service.dart';
+import 'data/repositories/error_log_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID');
   await HiveService.instance.init();
+  ErrorLogRepository.installGlobalHandlers();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

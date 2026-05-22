@@ -6,6 +6,7 @@ import '../../../core/widgets/section_title.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/models/dashboard_summary_model.dart';
 import '../../../data/models/app_enums.dart';
+import 'report_donut_chart.dart';
 
 class TodayReportStatus extends StatelessWidget {
   const TodayReportStatus({super.key, required this.summary});
@@ -14,11 +15,11 @@ class TodayReportStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = summary.pendingSync > 0
-        ? ReportStatus.late
-        : summary.todayReports > 0
-        ? ReportStatus.onTime
-        : ReportStatus.missing;
+    final status = summary.todayReports == 0
+        ? ReportStatus.missing
+        : summary.abnormalReports > 0
+        ? ReportStatus.abnormal
+        : ReportStatus.onTime;
 
     return GlassCard(
       child: Column(
@@ -29,7 +30,14 @@ class TodayReportStatus extends StatelessWidget {
             subtitle:
                 'Pantau progres laporan, pending sync, dan abnormal terbaru',
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          ReportDonutChart(
+            success: summary.successReports,
+            pending: summary.pendingSync,
+            late: summary.lateOperators,
+            abnormal: summary.abnormalReports,
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               StatusBadge.report(status),

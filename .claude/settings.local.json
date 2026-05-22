@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem *)",
+      "Bash(flutter analyze *)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)",
+      "Bash(sed -n '168,174p' lib/features/admin/admin_dashboard_page.dart)",
+      "Bash(sed -n '134,140p' lib/features/sync/pending_upload_page.dart)",
+      "Bash(sed -n '204,210p' lib/features/notifications/notification_page.dart)",
+      "Bash(sed -n '293,299p' lib/features/dashboard/operator_dashboard_page.dart)"
+    ]
+  }
+}

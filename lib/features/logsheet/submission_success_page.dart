@@ -18,10 +18,12 @@ class SubmissionSuccessPage extends StatelessWidget {
     super.key,
     required this.logsheet,
     required this.synced,
+    this.submittedCount = 1,
   });
 
   final LogsheetModel logsheet;
   final bool synced;
+  final int submittedCount;
 
   @override
   Widget build(BuildContext context) {
@@ -105,39 +107,46 @@ class SubmissionSuccessPage extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         synced
-                            ? 'Logsheet Berhasil Dikirim'
-                            : 'Logsheet Disimpan Offline',
+                            ? submittedCount > 1
+                                  ? '$submittedCount Logsheet Berhasil Diproses'
+                                  : 'Logsheet Berhasil Dikirim'
+                            : submittedCount > 1
+                            ? '$submittedCount Logsheet Masuk Pending Upload'
+                            : 'Logsheet Masuk Pending Upload',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        logsheet.proofId,
+                        submittedCount > 1
+                            ? 'Batch sesi ${logsheet.sessionId.isEmpty ? logsheet.proofId : logsheet.sessionId}'
+                            : logsheet.proofId,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
                       ),
                       const SizedBox(height: 14),
                       // Stat chips row
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           _StatChip(
                             label: 'Status',
-                            value: synced ? 'Synced' : 'Offline',
+                            value: synced ? 'Synced' : 'Pending Upload',
                           ),
-                          const SizedBox(width: 8),
                           _StatChip(
-                            label: 'Mesin',
-                            value: logsheet.serialNumber.split('-').last,
+                            label: 'Operasi',
+                            value: logsheet.machineStatus.label,
                           ),
-                          const SizedBox(width: 8),
                           _StatChip(
                             label: 'Sync',
                             value: switch (logsheet.syncStatus) {
                               SyncStatus.synced => 'Synced',
                               SyncStatus.pendingSync => 'Pending',
+                              SyncStatus.pendingEdit => 'Pending Edit',
                               SyncStatus.failed => 'Gagal',
                               SyncStatus.draft => 'Draft',
                             },
@@ -158,8 +167,8 @@ class SubmissionSuccessPage extends StatelessWidget {
                 Text(
                   'Informasi Laporan',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _InfoRow(
@@ -178,7 +187,34 @@ class SubmissionSuccessPage extends StatelessWidget {
                   icon: Icons.settings_rounded,
                   color: AppColors.highlight,
                   label: 'Mesin',
-                  value: logsheet.serialNumber,
+                  value: logsheet.machineDisplayName,
+                ),
+                if (logsheet.machineIdentity.isNotEmpty)
+                  _InfoRow(
+                    icon: Icons.memory_rounded,
+                    color: AppColors.accent,
+                    label: 'Detail Mesin',
+                    value: logsheet.machineIdentity,
+                  ),
+                if (logsheet.machineCapacityInfo.isNotEmpty)
+                  _InfoRow(
+                    icon: Icons.bolt_rounded,
+                    color: AppColors.primary,
+                    label: 'Kapasitas Master',
+                    value: logsheet.machineCapacityInfo,
+                  ),
+                if (logsheet.machineMasterInfo.isNotEmpty)
+                  _InfoRow(
+                    icon: Icons.fact_check_rounded,
+                    color: AppColors.accent,
+                    label: 'Info Master',
+                    value: logsheet.machineMasterInfo,
+                  ),
+                _InfoRow(
+                  icon: Icons.tune_rounded,
+                  color: AppColors.warning,
+                  label: 'Status Mesin',
+                  value: logsheet.machineStatus.label,
                 ),
                 _InfoRow(
                   icon: Icons.pin_drop_rounded,
@@ -196,11 +232,13 @@ class SubmissionSuccessPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                StatusBadge.machine(logsheet.machineStatus),
+                const SizedBox(height: 10),
                 Text(
                   'Foto Bukti',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 narrow
@@ -208,7 +246,7 @@ class SubmissionSuccessPage extends StatelessWidget {
                         children: [
                           _Thumb(
                             path: logsheet.selfiePhotoPath,
-                            label: 'Selfie',
+                            label: 'Absen Petugas',
                           ),
                           const SizedBox(height: 12),
                           _Thumb(
@@ -222,7 +260,7 @@ class SubmissionSuccessPage extends StatelessWidget {
                           Expanded(
                             child: _Thumb(
                               path: logsheet.selfiePhotoPath,
-                              label: 'Selfie',
+                              label: 'Absen Petugas',
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -238,9 +276,9 @@ class SubmissionSuccessPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          if (nextMachine != null) ...[
+          if (submittedCount == 1 && nextMachine != null) ...[
             AppButton(
-              label: 'Lanjut ke ${nextMachine.serialNumber.split('-').last}',
+              label: 'Lanjut ke ${nextMachine.shortLabel}',
               onPressed: () {
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -372,15 +410,15 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSoft,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textSoft),
                 ),
                 Text(
                   value,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -419,9 +457,9 @@ class _Thumb extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

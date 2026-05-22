@@ -22,8 +22,9 @@ class SettingsPage extends ConsumerWidget {
           SliverAppBar(
             expandedHeight: 130,
             pinned: true,
-            backgroundColor:
-                isDark ? AppColors.darkBackground : AppColors.primaryDark,
+            backgroundColor: isDark
+                ? AppColors.darkBackground
+                : AppColors.primaryDark,
             foregroundColor: Colors.white,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
@@ -75,9 +76,7 @@ class SettingsPage extends ConsumerWidget {
                               const SizedBox(width: 12),
                               Text(
                                 'Pengaturan',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w800,
@@ -114,10 +113,10 @@ class SettingsPage extends ConsumerWidget {
                           onChanged: (value) => ref
                               .read(appSettingsProvider.notifier)
                               .toggleTheme(value),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
-                      _Divider(),
+                      const _Divider(),
                       _SettingsTile(
                         icon: Icons.sync_rounded,
                         iconColor: AppColors.success,
@@ -128,10 +127,10 @@ class SettingsPage extends ConsumerWidget {
                           onChanged: (value) => ref
                               .read(appSettingsProvider.notifier)
                               .toggleAutoSync(value),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
-                      _Divider(),
+                      const _Divider(),
                       _SettingsTile(
                         icon: Icons.gps_fixed_rounded,
                         iconColor: AppColors.accent,
@@ -142,10 +141,10 @@ class SettingsPage extends ConsumerWidget {
                           onChanged: (value) => ref
                               .read(appSettingsProvider.notifier)
                               .toggleGpsHighAccuracy(value),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
-                      _Divider(),
+                      const _Divider(),
                       _SettingsTile(
                         icon: Icons.notifications_rounded,
                         iconColor: AppColors.warning,
@@ -156,7 +155,7 @@ class SettingsPage extends ConsumerWidget {
                           onChanged: (value) => ref
                               .read(appSettingsProvider.notifier)
                               .toggleNotifications(value),
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                         ),
                       ),
                     ],
@@ -179,9 +178,38 @@ class SettingsPage extends ConsumerWidget {
                           Icons.chevron_right_rounded,
                           color: AppColors.textSoft,
                         ),
-                        onTap: () {},
+                        onTap: () async {
+                          final selected = await showModalBottomSheet<String>(
+                            context: context,
+                            showDragHandle: true,
+                            builder: (sheetContext) => SafeArea(
+                              child: ListView(
+                                shrinkWrap: true,
+                                children: ['Indonesia', 'English']
+                                    .map(
+                                      (item) => ListTile(
+                                        title: Text(item),
+                                        trailing: settings.language == item
+                                            ? const Icon(
+                                                Icons.check_circle_rounded,
+                                                color: AppColors.success,
+                                              )
+                                            : null,
+                                        onTap: () => Navigator.pop(sheetContext, item),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          );
+                          if (selected != null) {
+                            await ref
+                                .read(appSettingsProvider.notifier)
+                                .setLanguage(selected);
+                          }
+                        },
                       ),
-                      _Divider(),
+                      const _Divider(),
                       _SettingsTile(
                         icon: Icons.cleaning_services_rounded,
                         iconColor: AppColors.accent,
@@ -262,9 +290,9 @@ class _SectionLabel extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
+            fontWeight: FontWeight.w700,
+            color: AppColors.primary,
+          ),
         ),
       ],
     );
@@ -314,15 +342,15 @@ class _SettingsTile extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (subtitle != null)
                     Text(
                       subtitle!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSoft,
-                          ),
+                        color: AppColors.textSoft,
+                      ),
                     ),
                 ],
               ),
@@ -336,6 +364,8 @@ class _SettingsTile extends StatelessWidget {
 }
 
 class _Divider extends StatelessWidget {
+  const _Divider();
+
   @override
   Widget build(BuildContext context) {
     return Divider(

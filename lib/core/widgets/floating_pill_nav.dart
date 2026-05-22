@@ -34,18 +34,18 @@ class FloatingPillNav extends StatelessWidget {
     final pill = ClipRRect(
       borderRadius: BorderRadius.circular(40),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
         child: Container(
-          height: 68,
+          height: 72,
           decoration: BoxDecoration(
             color: isDark
-                ? AppColors.pillNavDark.withValues(alpha: 0.92)
-                : AppColors.pillNavLight.withValues(alpha: 0.92),
+                ? AppColors.pillNavDark.withValues(alpha: 0.94)
+                : AppColors.pillNavLight.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(40),
             border: Border.all(
               color: isDark
                   ? AppColors.glassBorderDark
-                  : AppColors.border.withValues(alpha: 0.6),
+                  : AppColors.border.withValues(alpha: 0.5),
               width: 1.0,
             ),
           ),
@@ -75,12 +75,18 @@ class FloatingPillNav extends StatelessWidget {
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.16),
-            blurRadius: 28,
-            offset: const Offset(0, 8),
+            color: (isDark ? AppColors.accent : AppColors.primary)
+                .withValues(alpha: 0.22),
+            blurRadius: 40,
+            offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.07),
+            color: AppColors.primary.withValues(alpha: 0.14),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.09),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -104,41 +110,36 @@ class _PillNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = isDark ? AppColors.accent : AppColors.primary;
     final inactiveColor =
-        isDark ? const Color(0xFF92A7C5) : AppColors.textSoft;
+        isDark ? const Color(0xFF8BA3C0) : AppColors.textSoft;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 9),
+      margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 9),
       padding: selected
-          ? const EdgeInsets.symmetric(horizontal: 14, vertical: 5)
-          : const EdgeInsets.all(6),
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+          : const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: selected
             ? LinearGradient(
                 colors: isDark
-                    ? [
-                        AppColors.accent.withValues(alpha: 0.32),
-                        AppColors.primary.withValues(alpha: 0.20),
-                      ]
-                    : [
-                        AppColors.primary.withValues(alpha: 0.16),
-                        AppColors.accent.withValues(alpha: 0.08),
-                      ],
+                    ? [AppColors.accent, AppColors.auroraBlue]
+                    : [AppColors.primary, AppColors.accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : null,
-        border: selected
-            ? Border.all(
-                color: isDark
-                    ? AppColors.accent.withValues(alpha: 0.28)
-                    : AppColors.primary.withValues(alpha: 0.20),
-                width: 1,
-              )
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: (isDark ? AppColors.accent : AppColors.primary)
+                      .withValues(alpha: 0.40),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ]
             : null,
       ),
       child: selected
@@ -146,40 +147,43 @@ class _PillNavItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: isDark
-                        ? [AppColors.accent, AppColors.auroraCyan]
-                        : [AppColors.primary, AppColors.accent],
-                  ).createShader(bounds),
-                  child: Icon(item.activeIcon ?? item.icon, size: 20),
+                Icon(
+                  item.activeIcon ?? item.icon,
+                  size: 20,
+                  color: Colors.white,
                 ),
                 const SizedBox(width: 6),
                 Flexible(
-                  child: ShaderMask(
-                    blendMode: BlendMode.srcIn,
-                    shaderCallback: (bounds) => LinearGradient(
-                      colors: isDark
-                          ? [AppColors.accent, AppColors.auroraCyan]
-                          : [AppColors.primary, AppColors.accent],
-                    ).createShader(bounds),
-                    child: Text(
-                      item.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                          ),
-                    ),
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
                   ),
                 ),
               ],
             )
-          : Center(
-              child: Icon(item.icon, size: 22, color: inactiveColor),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(item.icon, size: 22, color: inactiveColor),
+                const SizedBox(height: 2),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: inactiveColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                      ),
+                ),
+              ],
             ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
@@ -9,12 +10,17 @@ import '../../core/widgets/app_loading.dart';
 import '../../data/models/app_enums.dart';
 import '../../data/models/logsheet_model.dart';
 import '../../data/repositories/logsheet_repository.dart';
+import '../auth/auth_controller.dart';
+import '../logsheet/input_logsheet_page.dart';
 import 'logsheet_detail_page.dart';
 import 'widgets/history_filter_bar.dart';
 import 'widgets/logsheet_history_card.dart';
 
 final historyProvider = FutureProvider<List<LogsheetModel>>((ref) {
-  return ref.read(logsheetRepositoryProvider).getHistory();
+  final user = ref.watch(authControllerProvider).user;
+  return ref.read(logsheetRepositoryProvider).getHistory(
+        operatorId: user?.isOperator == true ? user?.id : null,
+      );
 });
 
 class HistoryPage extends ConsumerStatefulWidget {
@@ -39,6 +45,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final history = ref.watch(historyProvider);
+    final user = ref.watch(authControllerProvider).user;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Riwayat Logsheet')),
@@ -54,10 +61,16 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   query.isEmpty ||
                   item.proofId.toLowerCase().contains(query) ||
                   item.unitName.toLowerCase().contains(query) ||
+                  item.machineDisplayName.toLowerCase().contains(query) ||
+                  item.machineIdentity.toLowerCase().contains(query) ||
+                  item.machineCapacityInfo.toLowerCase().contains(query) ||
+                  item.machineMasterInfo.toLowerCase().contains(query) ||
                   item.serialNumber.toLowerCase().contains(query);
               final matchSync = switch (_syncFilter) {
                 'Tersinkron' => item.syncStatus == SyncStatus.synced,
-                'Pending' => item.syncStatus == SyncStatus.pendingSync,
+                'Pending' =>
+                  item.syncStatus == SyncStatus.pendingSync ||
+                  item.syncStatus == SyncStatus.pendingEdit,
                 'Gagal' => item.syncStatus == SyncStatus.failed,
                 'Draft' => item.syncStatus == SyncStatus.draft,
                 _ => true,
@@ -87,7 +100,11 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
             return ListView(
               padding: EdgeInsets.fromLTRB(
-                  20, 20, 20, MediaQuery.of(context).padding.bottom + 108),
+                20,
+                20,
+                20,
+                MediaQuery.of(context).padding.bottom + 108,
+              ),
               children: [
                 HistoryFilterBar(
                   onSearchChanged: (value) => setState(() => _query = value),
@@ -114,39 +131,72 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                       setState(() => _locationFilter = value),
                   onUnitChanged: (value) => setState(() => _unitFilter = value),
                 ),
-                const SizedBox(height: 16),
-                GlassCard(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.12),
-                      Colors.transparent,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                const SizedBox(height: 12),
+                if (_syncFilter != 'Semua' ||
+                    _locationFilter != 'Semua' ||
+                    _unitFilter != 'Semua Unit' ||
+                    _selectedDate != null)
+                  GlassCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.10),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.filter_alt_rounded,
+                          size: 15,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Menampilkan ${filtered.length} hasil',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() {
+                            _syncFilter = 'Semua';
+                            _locationFilter = 'Semua';
+                            _unitFilter = 'Semua Unit';
+                            _selectedDate = null;
+                          }),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.close_rounded,
+                                size: 14,
+                                color: AppColors.textSoft,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Reset semua',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textSoft,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _MiniInfoChip(
-                        icon: Icons.filter_alt_rounded,
-                        label: 'Hasil ${filtered.length}',
-                      ),
-                      _MiniInfoChip(
-                        icon: Icons.sync_rounded,
-                        label: _syncFilter,
-                      ),
-                      _MiniInfoChip(
-                        icon: Icons.location_on_rounded,
-                        label: _locationFilter,
-                      ),
-                      _MiniInfoChip(
-                        icon: Icons.calendar_month_rounded,
-                        label: _selectedDate == null ? 'Semua tanggal' : '1 hari',
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 14),
                 if (filtered.isEmpty)
                   const AppEmptyState(
@@ -159,60 +209,41 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   ...filtered.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: LogsheetHistoryCard(
-                        logsheet: item,
-                        onTap: () {
-                          Navigator.push(
-                            context,
+                       child: LogsheetHistoryCard(
+                         logsheet: item,
+                         onTap: () {
+                           Navigator.push(
+                             context,
                             MaterialPageRoute<void>(
                               builder: (_) =>
                                   LogsheetDetailPage(logsheet: item),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                             ),
+                           );
+                         },
+                         onEdit: item.canEdit && user?.id == item.operatorId
+                             ? () {
+                                 Navigator.push(
+                                   context,
+                                   MaterialPageRoute<void>(
+                                     builder: (_) => InputLogsheetPage(
+                                       initialLogsheet: item,
+                                     ),
+                                   ),
+                                 ).then((_) => _refresh());
+                               }
+                             : null,
+                       ),
+                     ),
+                   ),
               ],
             );
           },
           loading: () => const AppLoading(),
-          error: (error, _) =>
-              AppErrorState(message: error.toString(), onRetry: _refresh),
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniInfoChip extends StatelessWidget {
-  const _MiniInfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: Colors.white,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.text,
-              fontWeight: FontWeight.w700,
+          error: (error, _) => AppErrorState(
+              message: ApiException.fromObject(error).message,
+              onRetry: _refresh,
             ),
-          ),
-        ],
+        ),
       ),
     );
   }

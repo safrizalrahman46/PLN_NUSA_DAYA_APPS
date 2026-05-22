@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../features/admin/admin_shell_page.dart';
 import '../../features/auth/forgot_password_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/dashboard/operator_shell_page.dart';
@@ -18,6 +19,7 @@ class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const operatorShell = '/operator';
   static const supervisorShell = '/supervisor';
+  static const adminShell = '/admin';
   static const settings = '/settings';
   static const reportExport = '/report-export';
 
@@ -33,6 +35,8 @@ class AppRoutes {
         return _buildRoute(const OperatorShellPage(), settings);
       case supervisorShell:
         return _buildRoute(const SupervisorShellPage(), settings);
+      case adminShell:
+        return _buildRoute(const AdminShellPage(), settings);
       case AppRoutes.settings:
         return _buildRoute(const SettingsPage(), settings);
       case AppRoutes.reportExport:

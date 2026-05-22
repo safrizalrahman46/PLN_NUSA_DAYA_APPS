@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/sync_feedback.dart';
 import '../../core/network/network_info.dart';
 import '../../data/repositories/logsheet_repository.dart';
 import '../profile/settings_controller.dart';
@@ -12,24 +13,28 @@ class SyncState {
     this.lastMessage,
     this.lastRunAt,
     this.started = false,
+    this.tone = SyncMessageTone.neutral,
   });
 
   final bool isSyncing;
   final String? lastMessage;
   final DateTime? lastRunAt;
   final bool started;
+  final SyncMessageTone tone;
 
   SyncState copyWith({
     bool? isSyncing,
     String? lastMessage,
     DateTime? lastRunAt,
     bool? started,
+    SyncMessageTone? tone,
   }) {
     return SyncState(
       isSyncing: isSyncing ?? this.isSyncing,
       lastMessage: lastMessage ?? this.lastMessage,
       lastRunAt: lastRunAt ?? this.lastRunAt,
       started: started ?? this.started,
+      tone: tone ?? this.tone,
     );
   }
 }
@@ -56,24 +61,39 @@ class SyncService extends StateNotifier<SyncState> {
   void start() {
     if (state.started) return;
     state = state.copyWith(started: true);
+    unawaited(_syncOnStartupIfNeeded());
     _subscription = _networkInfo.onConnectivityChanged.listen((connected) {
       final autoSync = _ref.read(appSettingsProvider).autoSync;
       if (connected && autoSync) {
-        syncPending();
+        unawaited(syncPending());
       }
     });
   }
 
-  Future<void> syncPending() async {
+  Future<void> _syncOnStartupIfNeeded() async {
+    final autoSync = _ref.read(appSettingsProvider).autoSync;
+    if (!autoSync) {
+      return;
+    }
+
+    final connected = await _networkInfo.isConnected;
+    if (connected) {
+      await syncPending();
+    }
+  }
+
+  Future<void> syncPending({String? localId}) async {
     if (state.isSyncing) return;
-    state = state.copyWith(isSyncing: true);
-    final count = await _repository.syncPendingLogsheets();
+    state = state.copyWith(
+      isSyncing: true,
+      tone: SyncMessageTone.neutral,
+    );
+    final result = await _repository.syncPendingLogsheets(localId: localId);
     state = state.copyWith(
       isSyncing: false,
       lastRunAt: DateTime.now(),
-      lastMessage: count == 0
-          ? 'Tidak ada data yang perlu disinkronkan.'
-          : '$count logsheet berhasil disinkronkan.',
+      lastMessage: result.message,
+      tone: result.tone,
     );
   }
 

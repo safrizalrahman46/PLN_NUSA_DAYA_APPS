@@ -6,6 +6,7 @@ import 'core/constants/app_colors.dart';
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
+import 'data/repositories/retention_repository.dart';
 import 'features/profile/settings_controller.dart';
 import 'features/sync/sync_service.dart';
 
@@ -23,6 +24,7 @@ class _PltdLogsheetAppState extends ConsumerState<PltdLogsheetApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(appSettingsProvider.notifier).load();
       ref.read(syncServiceProvider.notifier).start();
+      ref.read(retentionRepositoryProvider).archiveExpired();
     });
   }
 

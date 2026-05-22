@@ -12,10 +12,12 @@ class GpsStatusCard extends StatelessWidget {
     super.key,
     required this.result,
     required this.onValidate,
+    this.sessionLabel,
   });
 
   final LocationValidationResult? result;
   final VoidCallback onValidate;
+  final String? sessionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +70,27 @@ class GpsStatusCard extends StatelessWidget {
             ),
             Text('Jalan: ${result!.street}'),
             Text('Area: ${result!.locality}'),
+          ],
+          if (sessionLabel != null && sessionLabel!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.20),
+                ),
+              ),
+              child: Text(
+                sessionLabel!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
           const SizedBox(height: 14),
           AppButton(

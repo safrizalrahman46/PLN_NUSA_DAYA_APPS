@@ -12,10 +12,12 @@ class PendingUploadCard extends StatelessWidget {
     super.key,
     required this.logsheet,
     required this.onSync,
+    this.onEdit,
   });
 
   final LogsheetModel logsheet;
   final VoidCallback onSync;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +51,8 @@ class PendingUploadCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   logsheet.proofId,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -60,7 +64,7 @@ class PendingUploadCard extends StatelessWidget {
                 sigmaX: 6,
                 sigmaY: 6,
                 child: Text(
-                  'Pending',
+                  logsheet.lifecycleStatusLabel,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.warning,
                         fontWeight: FontWeight.w700,
@@ -98,20 +102,64 @@ class PendingUploadCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderColor: AppColors.danger.withValues(alpha: 0.25),
-              child: Text(
-                logsheet.syncErrorMessage!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.danger,
-                    ),
-              ),
-            ),
-          ],
+               borderColor: AppColors.danger.withValues(alpha: 0.25),
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Row(
+                     children: [
+                       const Icon(
+                         Icons.info_outline_rounded,
+                         color: AppColors.danger,
+                         size: 18,
+                       ),
+                       const SizedBox(width: 8),
+                       Text(
+                         'Kendala sinkronisasi',
+                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                               color: AppColors.danger,
+                               fontWeight: FontWeight.w800,
+                             ),
+                       ),
+                     ],
+                   ),
+                   const SizedBox(height: 8),
+                   Text(
+                     logsheet.syncErrorMessage!,
+                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                           color: AppColors.danger,
+                         ),
+                   ),
+                   const SizedBox(height: 6),
+                   Text(
+                     'Data tetap aman di perangkat. Anda bisa coba sync lagi atau edit dulu sebelum dikirim ulang.',
+                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                           color: AppColors.textSoft,
+                           fontWeight: FontWeight.w600,
+                         ),
+                   ),
+                 ],
+               ),
+             ),
+           ],
           const SizedBox(height: 14),
-          AppButton(
-            label: 'Sync Item Ini',
-            onPressed: onSync,
-            fullWidth: false,
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              AppButton(
+                label: 'Retry Sync',
+                onPressed: onSync,
+                fullWidth: false,
+              ),
+              if (onEdit != null)
+                AppButton(
+                  label: 'Edit Pending',
+                  onPressed: onEdit,
+                  type: AppButtonType.outlined,
+                  fullWidth: false,
+                ),
+            ],
           ),
         ],
       ),

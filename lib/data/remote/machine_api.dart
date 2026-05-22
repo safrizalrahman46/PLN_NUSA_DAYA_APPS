@@ -8,6 +8,18 @@ class MachineApi {
 
   final Dio _dio;
 
+  Future<List<MachineModel>> getAllMachines() async {
+    try {
+      final response = await _dio.get('/machines');
+      final data = response.data['data'] as List<dynamic>;
+      return data
+          .map((item) => MachineModel.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    } on DioException {
+      return DummyData.machines;
+    }
+  }
+
   Future<List<MachineModel>> getMachines(String unitId) async {
     try {
       final response = await _dio.get(

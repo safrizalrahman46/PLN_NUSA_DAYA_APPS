@@ -12,9 +12,20 @@ class StatusBadge extends StatelessWidget {
   factory StatusBadge.sync(SyncStatus status) {
     final map = <SyncStatus, (String, Color)>{
       SyncStatus.draft: ('Draft', AppColors.textSoft),
-      SyncStatus.pendingSync: ('Pending', AppColors.warning),
-      SyncStatus.synced: ('Tersinkron', AppColors.success),
-      SyncStatus.failed: ('Gagal', AppColors.danger),
+      SyncStatus.pendingSync: ('Pending Sync', AppColors.warning),
+      SyncStatus.pendingEdit: ('Pending Edit', AppColors.highlight),
+      SyncStatus.synced: ('Terkirim', AppColors.success),
+      SyncStatus.failed: ('Sync Gagal', AppColors.danger),
+    };
+    final item = map[status]!;
+    return StatusBadge(label: item.$1, color: item.$2);
+  }
+
+  factory StatusBadge.approval(ApprovalStatus status) {
+    final map = <ApprovalStatus, (String, Color)>{
+      ApprovalStatus.pendingReview: ('Terkirim', AppColors.success),
+      ApprovalStatus.approved: ('Disetujui', AppColors.success),
+      ApprovalStatus.rejected: ('Ditolak', AppColors.danger),
     };
     final item = map[status]!;
     return StatusBadge(label: item.$1, color: item.$2);
@@ -43,6 +54,16 @@ class StatusBadge extends StatelessWidget {
     return StatusBadge(label: item.$1, color: item.$2);
   }
 
+  factory StatusBadge.machine(MachineStatus status) {
+    final map = <MachineStatus, (String, Color)>{
+      MachineStatus.operasi: (status.label, AppColors.success),
+      MachineStatus.standby: (status.label, AppColors.warning),
+      MachineStatus.gangguanRusak: (status.label, AppColors.danger),
+    };
+    final item = map[status]!;
+    return StatusBadge(label: item.$1, color: item.$2);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -50,10 +71,7 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: 0.25),
-          width: 1.0,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.0),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -61,10 +79,7 @@ class StatusBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-            ),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
           ),
           const SizedBox(width: 6),
           Text(

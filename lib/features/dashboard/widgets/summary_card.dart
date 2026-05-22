@@ -53,66 +53,91 @@ class SummaryCard extends StatelessWidget {
     };
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.30),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 22),
+          // Top accent bar
+          Container(
+            height: 4,
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
-              const Spacer(),
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.50),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark ? Colors.white60 : AppColors.textSoft,
-                    ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: gradient,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.32),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 22),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        margin: const EdgeInsets.only(top: 4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: color,
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.55),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color:
+                                  isDark ? Colors.white60 : AppColors.textSoft,
+                            ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        value,
+                        style: Theme.of(context)
+                            .textTheme
+                            .displaySmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white : AppColors.text,
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : AppColors.text,
-                    ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

@@ -3,21 +3,27 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/network/network_info.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_helper.dart';
 import '../../core/widgets/app_error_state.dart';
+import '../../core/widgets/app_loading.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_shimmer.dart';
-import '../../data/dummy/dummy_data.dart';
 import '../../data/local/hive_service.dart';
 import '../../data/models/dashboard_summary_model.dart';
+import '../../data/models/unit_model.dart';
 import '../../data/repositories/logsheet_repository.dart';
+import '../../data/repositories/machine_repository.dart';
+import '../../data/repositories/unit_repository.dart';
 import '../auth/auth_controller.dart';
 import '../history/history_page.dart';
 import '../logsheet/input_logsheet_page.dart';
 import '../profile/profile_page.dart';
+import '../reports/report_page.dart';
 import '../sync/pending_upload_page.dart';
+import '../units/unit_detail_page.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/next_report_card.dart';
 import 'widgets/quick_action_grid.dart';
@@ -26,7 +32,19 @@ import 'widgets/today_report_status.dart';
 import 'widgets/unit_quick_access_card.dart';
 
 final operatorSummaryProvider = FutureProvider<DashboardSummaryModel>((ref) {
-  return ref.read(logsheetRepositoryProvider).getOperatorSummary();
+  final user = ref.watch(authControllerProvider).user;
+  return ref
+      .read(logsheetRepositoryProvider)
+      .getOperatorSummary(user?.isOperator == true ? user?.id : null);
+});
+
+final operatorUnitsProvider = FutureProvider<List<UnitModel>>((ref) {
+  return ref.read(unitRepositoryProvider).getUnits();
+});
+
+final operatorMachineCountProvider = FutureProvider<int>((ref) async {
+  final items = await ref.read(machineRepositoryProvider).getAllMachines();
+  return items.length;
 });
 
 class OperatorDashboardPage extends ConsumerStatefulWidget {
@@ -69,9 +87,13 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
     final summary = ref.watch(operatorSummaryProvider);
     final online = ref.watch(networkStatusProvider).valueOrNull ?? true;
     final hive = ref.read(hiveServiceProvider);
+    final unitsAsync = ref.watch(operatorUnitsProvider);
+    final machineCountAsync = ref.watch(operatorMachineCountProvider);
     final lastSelectedUnitId = hive.settingsBox
         .get('last_selected_unit_id')
         ?.toString();
+    final units = unitsAsync.valueOrNull ?? const <UnitModel>[];
+    final machineCount = machineCountAsync.valueOrNull ?? 0;
 
     return Scaffold(
       body: RefreshIndicator(
@@ -115,6 +137,14 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                     child: NextReportCard(
                       nextReportAt: data.nextReportAt,
                       countdownText: DateHelper.countdownText(data.nextReportAt),
+                      onReadyInput: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => InputLogsheetPage(
+                            initialUnitId: lastSelectedUnitId,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -162,6 +192,7 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                     index: 2,
                     animateIn: _animateIn,
                     child: QuickActionGrid(
+                      pendingCount: data.pendingSync,
                       onInput: () => Navigator.push(
                         context,
                         MaterialPageRoute<void>(
@@ -180,6 +211,12 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                           builder: (_) => const PendingUploadPage(),
                         ),
                       ),
+                      onReport: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ReportPage(),
+                        ),
+                      ),
                       onProfile: () => Navigator.push(
                         context,
                         MaterialPageRoute<void>(
@@ -189,24 +226,29 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _AnimatedSection(
-                    index: 3,
-                    animateIn: _animateIn,
-                    child: UnitQuickAccessCard(
-                      units: DummyData.units,
-                      lastSelectedUnitId: lastSelectedUnitId,
-                      onPickUnit: (unit) {
-                        hive.settingsBox.put('last_selected_unit_id', unit.id);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                InputLogsheetPage(initialUnitId: unit.id),
-                          ),
-                        );
-                      },
+                    _AnimatedSection(
+                      index: 3,
+                      animateIn: _animateIn,
+                      child: unitsAsync.when(
+                        data: (items) => UnitQuickAccessCard(
+                          units: items,
+                          lastSelectedUnitId: lastSelectedUnitId,
+                          onPickUnit: (unit) {
+                            hive.settingsBox.put('last_selected_unit_id', unit.id);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => UnitDetailPage(unit: unit),
+                              ),
+                            );
+                          },
+                        ),
+                        loading: () => const AppLoading(),
+                        error: (error, _) => AppErrorState(
+                          message: ApiException.fromObject(error).message,
+                        ),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 18),
                   _AnimatedSection(
                     index: 4,
@@ -222,18 +264,18 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                             spacing: 12,
                             runSpacing: 12,
                             children: [
-                              SizedBox(
-                                width: tileWidth,
-                                child: _ScopeInfo(
-                                  label: 'Cakupan Lokasi',
-                                  value: '${DummyData.units.length} unit',
+                                SizedBox(
+                                  width: tileWidth,
+                                  child: _ScopeInfo(
+                                    label: 'Cakupan Lokasi',
+                                    value: '${units.length} unit',
+                                  ),
                                 ),
-                              ),
                               SizedBox(
                                 width: tileWidth,
                                 child: _ScopeInfo(
                                   label: 'Total Mesin',
-                                  value: '${DummyData.machines.length} mesin',
+                                  value: '$machineCount mesin',
                                 ),
                               ),
                               SizedBox(
@@ -274,8 +316,10 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                   ),
                 ),
               ),
-              error: (error, _) =>
-                  AppErrorState(message: error.toString(), onRetry: _refresh),
+              error: (error, _) => AppErrorState(
+                  message: ApiException.fromObject(error).message,
+                  onRetry: _refresh,
+                ),
             ),
           ],
         ),

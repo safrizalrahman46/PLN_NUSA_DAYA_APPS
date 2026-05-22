@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/utils/date_helper.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../data/models/app_enums.dart';
 import '../../data/models/logsheet_model.dart';
+import '../../data/repositories/error_log_repository.dart';
+import '../../data/repositories/logsheet_repository.dart';
+import '../auth/auth_controller.dart';
+import '../logsheet/input_logsheet_page.dart';
+import '../profile/settings_controller.dart';
+import '../reports/report_export_service.dart';
 
-class LogsheetDetailPage extends StatelessWidget {
+class LogsheetDetailPage extends ConsumerWidget {
   const LogsheetDetailPage({
     super.key,
     required this.logsheet,
@@ -18,9 +27,13 @@ class LogsheetDetailPage extends StatelessWidget {
   final String title;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final user = ref.watch(authControllerProvider).user;
+    final operatorFieldLabel = ref.watch(appSettingsProvider).operatorFieldLabel;
+    final canApprove = user?.isSupervisor == true || user?.isAdmin == true || user?.isSuperadmin == true;
+    final canEdit = user?.id == logsheet.operatorId && logsheet.canEdit;
 
     return Scaffold(
       body: CustomScrollView(
@@ -28,8 +41,9 @@ class LogsheetDetailPage extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            backgroundColor:
-                isDark ? AppColors.darkBackground : AppColors.primaryDark,
+            backgroundColor: isDark
+                ? AppColors.darkBackground
+                : AppColors.primaryDark,
             foregroundColor: Colors.white,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
@@ -68,9 +82,7 @@ class LogsheetDetailPage extends StatelessWidget {
                             children: [
                               Text(
                                 title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w800,
@@ -86,9 +98,7 @@ class LogsheetDetailPage extends StatelessWidget {
                                   const SizedBox(width: 8),
                                   _HeaderChip(
                                     icon: Icons.settings_rounded,
-                                    label: logsheet.serialNumber
-                                        .split('-')
-                                        .last,
+                                    label: logsheet.machineShortLabel,
                                   ),
                                 ],
                               ),
@@ -97,7 +107,9 @@ class LogsheetDetailPage extends StatelessWidget {
                                 spacing: 6,
                                 runSpacing: 6,
                                 children: [
+                                  StatusBadge.machine(logsheet.machineStatus),
                                   StatusBadge.sync(logsheet.syncStatus),
+                                  StatusBadge.approval(logsheet.approvalStatus),
                                   StatusBadge.location(logsheet.locationStatus),
                                   StatusBadge.report(logsheet.reportStatus),
                                 ],
@@ -129,13 +141,38 @@ class LogsheetDetailPage extends StatelessWidget {
                       Text(
                         logsheet.proofId,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 14),
-                      _DetailRow(label: 'Operator', value: logsheet.operatorName),
+                      _DetailRow(
+                        label: 'Operator',
+                        value: logsheet.operatorName,
+                      ),
                       _DetailRow(label: 'Unit', value: logsheet.unitName),
-                      _DetailRow(label: 'Mesin', value: logsheet.serialNumber),
+                      _DetailRow(
+                        label: 'Mesin',
+                        value: logsheet.machineDisplayName,
+                      ),
+                      if (logsheet.machineIdentity.isNotEmpty)
+                        _DetailRow(
+                          label: 'Detail Mesin',
+                          value: logsheet.machineIdentity,
+                        ),
+                      if (logsheet.machineCapacityInfo.isNotEmpty)
+                        _DetailRow(
+                          label: 'Kapasitas Master',
+                          value: logsheet.machineCapacityInfo,
+                        ),
+                      if (logsheet.machineMasterInfo.isNotEmpty)
+                        _DetailRow(
+                          label: 'Info Master',
+                          value: logsheet.machineMasterInfo,
+                        ),
+                      _DetailRow(
+                        label: 'Status Mesin',
+                        value: logsheet.machineStatus.label,
+                      ),
                       _DetailRow(
                         label: 'Waktu Submit',
                         value: DateHelper.formatFull(logsheet.submittedAt),
@@ -209,10 +246,10 @@ class LogsheetDetailPage extends StatelessWidget {
                         value: logsheet.notes.isEmpty ? '-' : logsheet.notes,
                       ),
                       _DetailRow(
-                        label: 'Kondisi Lapangan',
-                        value: logsheet.fieldCondition.isEmpty
-                            ? '-'
-                            : logsheet.fieldCondition,
+                          label: operatorFieldLabel,
+                          value: logsheet.fieldCondition.isEmpty
+                              ? '-'
+                              : logsheet.fieldCondition,
                       ),
                       _DetailRow(
                         label: 'Abnormal Notes',
@@ -235,8 +272,30 @@ class LogsheetDetailPage extends StatelessWidget {
                           : (MediaQuery.of(context).size.width - 50) / 2,
                       child: AppButton(
                         label: 'Download PDF',
-                        onPressed: () =>
-                            _snack(context, 'Download PDF dummy dijalankan.'),
+                        onPressed: () async {
+                          try {
+                            final service = ReportExportService();
+                            await service.sharePdf(
+                              ReportExportPayload(
+                                records: [logsheet],
+                                periodLabel: 'Detail',
+                                 fileNameBase: 'Logsheet_${logsheet.proofId}',
+                                 exportedBy: user?.name ?? logsheet.operatorName,
+                                 dateRangeLabel: DateHelper.formatDateTime(logsheet.submittedAt),
+                                 operatorFieldLabel: operatorFieldLabel,
+                               ),
+                             );
+                          } catch (error, stackTrace) {
+                            await ref.read(errorLogRepositoryProvider).logException(
+                                  error: error,
+                                  stackTrace: stackTrace,
+                                  page: 'LogsheetDetailPage.sharePdf',
+                                  user: user,
+                                );
+                            if (!context.mounted) return;
+                            _snack(context, 'Gagal download PDF: ${ApiException.fromObject(error).message}');
+                          }
+                        },
                       ),
                     ),
                     SizedBox(
@@ -244,21 +303,139 @@ class LogsheetDetailPage extends StatelessWidget {
                           ? double.infinity
                           : (MediaQuery.of(context).size.width - 50) / 2,
                       child: AppButton(
-                        label: 'Share Report',
-                        onPressed: () =>
-                            _snack(context, 'Share report dummy dijalankan.'),
+                        label: 'Download Excel',
+                        onPressed: () async {
+                          try {
+                            final service = ReportExportService();
+                            await service.shareExcel(
+                              ReportExportPayload(
+                                records: [logsheet],
+                                periodLabel: 'Detail',
+                                 fileNameBase: 'Logsheet_${logsheet.proofId}',
+                                 exportedBy: user?.name ?? logsheet.operatorName,
+                                 dateRangeLabel: DateHelper.formatDateTime(logsheet.submittedAt),
+                                 operatorFieldLabel: operatorFieldLabel,
+                               ),
+                             );
+                          } catch (error, stackTrace) {
+                            await ref.read(errorLogRepositoryProvider).logException(
+                                  error: error,
+                                  stackTrace: stackTrace,
+                                  page: 'LogsheetDetailPage.shareExcel',
+                                  user: user,
+                                );
+                            if (!context.mounted) return;
+                            _snack(context, 'Gagal download Excel: ${ApiException.fromObject(error).message}');
+                          }
+                        },
                         type: AppButtonType.outlined,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
+                if (canEdit) ...[
+                  AppButton(
+                    label: 'Edit Inputan',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => InputLogsheetPage(initialLogsheet: logsheet),
+                        ),
+                      );
+                    },
+                    type: AppButtonType.tonal,
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 AppButton(
-                  label: 'Resync',
-                  onPressed: () =>
-                      _snack(context, 'Resync dummy dijalankan.'),
+                  label: 'Retry Sync',
+                  onPressed: logsheet.syncStatus == SyncStatus.synced
+                      ? null
+                      : () async {
+                          final count = await ref
+                              .read(logsheetRepositoryProvider)
+                              .syncPendingLogsheets(localId: logsheet.localId);
+                          if (!context.mounted) return;
+                          _snack(
+                            context,
+                            count.successCount > 0
+                                ? 'Sinkronisasi berhasil untuk ${logsheet.proofId}.'
+                                : count.message,
+                          );
+                        },
                   type: AppButtonType.tonal,
                 ),
+                if (canApprove && logsheet.syncStatus == SyncStatus.synced) ...[
+                  const SizedBox(height: 10),
+                  OverflowBar(
+                    spacing: 10,
+                    overflowSpacing: 10,
+                    children: [
+                      AppButton(
+                        label: 'Validasi Data',
+                        onPressed: logsheet.approvalStatus == ApprovalStatus.approved
+                            ? null
+                            : () async {
+                                await ref
+                                    .read(logsheetRepositoryProvider)
+                                    .updateApproval(
+                                      logsheet.localId,
+                                      ApprovalStatus.approved,
+                                    );
+                                if (!context.mounted) return;
+                                _snack(context, 'Data berhasil disetujui.');
+                              },
+                        fullWidth: false,
+                      ),
+                      AppButton(
+                        label: 'Tolak Data',
+                        onPressed: () async {
+                          final reason = await showDialog<String>(
+                            context: context,
+                            builder: (dialogContext) {
+                              final controller = TextEditingController();
+                              return AlertDialog(
+                                title: const Text('Alasan Penolakan'),
+                                content: TextField(
+                                  controller: controller,
+                                  maxLines: 3,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Masukkan alasan penolakan',
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialogContext),
+                                    child: const Text('Batal'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.pop(
+                                      dialogContext,
+                                      controller.text.trim(),
+                                    ),
+                                    child: const Text('Simpan'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (reason == null || reason.isEmpty) return;
+                          await ref.read(logsheetRepositoryProvider).updateApproval(
+                                logsheet.localId,
+                                ApprovalStatus.rejected,
+                                rejectionReason: reason,
+                              );
+                          if (!context.mounted) return;
+                          _snack(context, 'Data ditolak dan notifikasi terkirim.');
+                        },
+                        type: AppButtonType.outlined,
+                        fullWidth: false,
+                      ),
+                    ],
+                  ),
+                ],
               ]),
             ),
           ),
@@ -341,9 +518,9 @@ class _SectionHeader extends StatelessWidget {
         const SizedBox(width: 10),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );

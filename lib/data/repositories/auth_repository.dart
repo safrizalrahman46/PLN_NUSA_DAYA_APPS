@@ -55,6 +55,11 @@ class AuthRepository {
     return null;
   }
 
+  Future<UserModel> updateCurrentUser(UserModel user) async {
+    await _hiveService.settingsBox.put('current_user', user.toJson());
+    return user;
+  }
+
   Future<void> logout() async {
     await _api.logout();
     await _tokenStorage.clear();

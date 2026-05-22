@@ -27,7 +27,11 @@ class SupervisorRepository {
     return DashboardSummaryModel(
       todayReports: history.where(_isToday).length,
       pendingSync: history
-          .where((item) => item.syncStatus == SyncStatus.pendingSync)
+          .where(
+            (item) =>
+                item.syncStatus == SyncStatus.pendingSync ||
+                item.syncStatus == SyncStatus.pendingEdit,
+          )
           .length,
       successReports: history
           .where((item) => item.syncStatus == SyncStatus.synced)
@@ -47,23 +51,40 @@ class SupervisorRepository {
   Future<List<Map<String, dynamic>>> getMonitoringItems() async {
     final remoteItems = await _api.getMonitoring();
     if (remoteItems.isNotEmpty) {
+      final history = await _localDatasource.fetchAll();
       return remoteItems
           .map(
-            (item) => {
-              'unit': item['unit'] ?? item['unit_name'] ?? '-',
-              'operator':
-                  item['operator'] ?? item['operator_name'] ?? 'Belum ada data',
-              'lastSubmit': item['lastSubmit'] ?? item['last_submit'],
-              'reportStatus':
-                  item['reportStatus'] ??
-                  item['report_status'] ??
-                  ReportStatus.missing.name,
-              'locationStatus':
-                  item['locationStatus'] ??
-                  item['location_status'] ??
-                  LocationStatus.unknown.name,
-              'hasPhoto': item['hasPhoto'] ?? item['has_photo'] ?? false,
-              'logsheet': null,
+            (item) {
+              final unitName = item['unit']?.toString() ??
+                  item['unit_name']?.toString() ??
+                  '-';
+              final localLogsheet = history.cast<LogsheetModel?>().firstWhere(
+                    (log) => log?.unitName == unitName,
+                    orElse: () => null,
+                  );
+              return {
+                'unit': unitName,
+                'operator': item['operator'] ??
+                    item['operator_name'] ??
+                    localLogsheet?.operatorName ??
+                    'Belum ada data',
+                'lastSubmit': item['lastSubmit'] ??
+                    item['last_submit'] ??
+                    localLogsheet?.submittedAt,
+                'reportStatus': item['reportStatus'] ??
+                    item['report_status'] ??
+                    localLogsheet?.reportStatus.name ??
+                    ReportStatus.missing.name,
+                'locationStatus': item['locationStatus'] ??
+                    item['location_status'] ??
+                    localLogsheet?.locationStatus.name ??
+                    LocationStatus.unknown.name,
+                'hasPhoto': item['hasPhoto'] ??
+                    item['has_photo'] ??
+                    ((localLogsheet?.machinePhotoPath.isNotEmpty ?? false) &&
+                        (localLogsheet?.selfiePhotoPath.isNotEmpty ?? false)),
+                'logsheet': localLogsheet,
+              };
             },
           )
           .toList();
@@ -80,8 +101,8 @@ class SupervisorRepository {
         'reportStatus': (latest?.reportStatus ?? ReportStatus.missing).name,
         'locationStatus':
             (latest?.locationStatus ?? LocationStatus.unknown).name,
-        'hasPhoto':
-            (latest?.machinePhotoPath.isNotEmpty ?? false) || latest != null,
+        'hasPhoto': (latest?.machinePhotoPath.isNotEmpty ?? false) &&
+            (latest?.selfiePhotoPath.isNotEmpty ?? false),
         'logsheet': latest,
       };
     }).toList();
@@ -132,7 +153,11 @@ class SupervisorRepository {
             .where((item) => item.reportStatus == ReportStatus.abnormal)
             .length,
         'pending': unitLogs
-            .where((item) => item.syncStatus == SyncStatus.pendingSync)
+            .where(
+              (item) =>
+                  item.syncStatus == SyncStatus.pendingSync ||
+                  item.syncStatus == SyncStatus.pendingEdit,
+            )
             .length,
       };
     }).toList();

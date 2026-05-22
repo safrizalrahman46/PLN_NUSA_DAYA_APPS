@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../data/models/logsheet_model.dart';
 import '../../data/repositories/logsheet_repository.dart';
+import '../auth/auth_controller.dart';
+import '../logsheet/input_logsheet_page.dart';
 import 'sync_service.dart';
 import 'widgets/pending_upload_card.dart';
 import 'widgets/sync_status_banner.dart';
 
 final pendingProvider = FutureProvider<List<LogsheetModel>>((ref) {
-  return ref.read(logsheetRepositoryProvider).getPendingUploads();
+  final user = ref.watch(authControllerProvider).user;
+  return ref.read(logsheetRepositoryProvider).getPendingUploads(
+        operatorId: user?.isOperator == true ? user?.id : null,
+      );
 });
 
 class PendingUploadPage extends ConsumerWidget {
@@ -28,6 +34,7 @@ class PendingUploadPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pending = ref.watch(pendingProvider);
     final syncState = ref.watch(syncServiceProvider);
+    final user = ref.watch(authControllerProvider).user;
 
     ref.listen(syncServiceProvider, (previous, next) {
       if (next.lastMessage != null &&
@@ -108,7 +115,19 @@ class PendingUploadPage extends ConsumerWidget {
                           logsheet: item,
                           onSync: () => ref
                               .read(syncServiceProvider.notifier)
-                              .syncPending(),
+                              .syncPending(localId: item.localId),
+                          onEdit: item.canEdit && user?.id == item.operatorId
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => InputLogsheetPage(
+                                        initialLogsheet: item,
+                                      ),
+                                    ),
+                                  ).then((_) => _refresh(ref));
+                                }
+                              : null,
                         ),
                       ),
                     ),
@@ -116,7 +135,7 @@ class PendingUploadPage extends ConsumerWidget {
               ),
               loading: () => const AppLoading(),
               error: (error, _) => AppErrorState(
-                message: error.toString(),
+                message: ApiException.fromObject(error).message,
                 onRetry: () => _refresh(ref),
               ),
             ),

@@ -12,10 +12,12 @@ class LogsheetHistoryCard extends StatelessWidget {
     super.key,
     required this.logsheet,
     required this.onTap,
+    this.onEdit,
   });
 
   final LogsheetModel logsheet;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   Color _iconColor() {
     return switch (logsheet.reportStatus) {
@@ -68,9 +70,8 @@ class LogsheetHistoryCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         logsheet.proofId,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                     Container(
@@ -91,9 +92,9 @@ class LogsheetHistoryCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   DateHelper.formatDateTime(logsheet.submittedAt),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSoft,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textSoft),
                 ),
                 const SizedBox(height: 10),
                 GlassCard(
@@ -104,11 +105,34 @@ class LogsheetHistoryCard extends StatelessWidget {
                   borderRadius: 12,
                   sigmaX: 6,
                   sigmaY: 6,
-                  child: Text(
-                    '${logsheet.unitName} • ${logsheet.serialNumber}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${logsheet.unitName} • ${logsheet.machineDisplayName}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        logsheet.machineIdentity.isEmpty
+                            ? 'Status mesin: ${logsheet.machineStatus.label}'
+                            : '${logsheet.machineIdentity} • ${logsheet.machineStatus.label}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSoft,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (logsheet.machineCapacityInfo.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          logsheet.machineCapacityInfo,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textSoft),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -116,11 +140,34 @@ class LogsheetHistoryCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 6,
                   children: [
+                    StatusBadge.machine(logsheet.machineStatus),
                     StatusBadge.sync(logsheet.syncStatus),
+                    StatusBadge.approval(logsheet.approvalStatus),
                     StatusBadge.location(logsheet.locationStatus),
                     StatusBadge.report(logsheet.reportStatus),
                   ],
                 ),
+                if (logsheet.rejectionReason.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Alasan penolakan: ${logsheet.rejectionReason}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+                if (onEdit != null) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_rounded),
+                      label: const Text('Edit inputan'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

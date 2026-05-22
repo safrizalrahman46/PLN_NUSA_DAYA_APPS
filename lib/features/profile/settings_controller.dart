@@ -10,7 +10,10 @@ class AppSettingsState {
     this.gpsHighAccuracy = true,
     this.notificationsEnabled = true,
     this.language = 'Indonesia',
+    this.operatorFieldLabel = 'Nama Petugas Operator',
     this.onboardingSeen = false,
+    this.retentionYears = 5,
+    this.retentionAutoArchive = true,
   });
 
   final ThemeMode themeMode;
@@ -18,7 +21,10 @@ class AppSettingsState {
   final bool gpsHighAccuracy;
   final bool notificationsEnabled;
   final String language;
+  final String operatorFieldLabel;
   final bool onboardingSeen;
+  final int retentionYears;
+  final bool retentionAutoArchive;
 
   AppSettingsState copyWith({
     ThemeMode? themeMode,
@@ -26,7 +32,10 @@ class AppSettingsState {
     bool? gpsHighAccuracy,
     bool? notificationsEnabled,
     String? language,
+    String? operatorFieldLabel,
     bool? onboardingSeen,
+    int? retentionYears,
+    bool? retentionAutoArchive,
   }) {
     return AppSettingsState(
       themeMode: themeMode ?? this.themeMode,
@@ -34,7 +43,11 @@ class AppSettingsState {
       gpsHighAccuracy: gpsHighAccuracy ?? this.gpsHighAccuracy,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       language: language ?? this.language,
+      operatorFieldLabel: operatorFieldLabel ?? this.operatorFieldLabel,
       onboardingSeen: onboardingSeen ?? this.onboardingSeen,
+      retentionYears: retentionYears ?? this.retentionYears,
+      retentionAutoArchive:
+          retentionAutoArchive ?? this.retentionAutoArchive,
     );
   }
 }
@@ -60,7 +73,14 @@ class AppSettingsController extends StateNotifier<AppSettingsState> {
       notificationsEnabled:
           box.get('notifications_enabled', defaultValue: true) as bool,
       language: box.get('language', defaultValue: 'Indonesia') as String,
+      operatorFieldLabel: box.get(
+        'operator_field_label',
+        defaultValue: 'Nama Petugas Operator',
+      ) as String,
       onboardingSeen: box.get('onboarding_seen', defaultValue: false) as bool,
+      retentionYears: box.get('retention_years', defaultValue: 5) as int,
+      retentionAutoArchive:
+          box.get('retention_auto_archive', defaultValue: true) as bool,
     );
   }
 
@@ -92,6 +112,29 @@ class AppSettingsController extends StateNotifier<AppSettingsState> {
   Future<void> setOnboardingSeen() async {
     state = state.copyWith(onboardingSeen: true);
     await _hiveService.settingsBox.put('onboarding_seen', true);
+  }
+
+  Future<void> setLanguage(String value) async {
+    state = state.copyWith(language: value);
+    await _hiveService.settingsBox.put('language', value);
+  }
+
+  Future<void> setOperatorFieldLabel(String value) async {
+    final trimmed = value.trim().isEmpty
+        ? 'Nama Petugas Operator'
+        : value.trim();
+    state = state.copyWith(operatorFieldLabel: trimmed);
+    await _hiveService.settingsBox.put('operator_field_label', trimmed);
+  }
+
+  Future<void> setRetentionYears(int years) async {
+    state = state.copyWith(retentionYears: years);
+    await _hiveService.settingsBox.put('retention_years', years);
+  }
+
+  Future<void> toggleRetentionAutoArchive(bool enabled) async {
+    state = state.copyWith(retentionAutoArchive: enabled);
+    await _hiveService.settingsBox.put('retention_auto_archive', enabled);
   }
 
   Future<void> clearCache() async {
