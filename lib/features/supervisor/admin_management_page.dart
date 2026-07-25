@@ -10,12 +10,15 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/section_title.dart';
 import '../../core/widgets/status_badge.dart';
-import '../../data/dummy/dummy_data.dart';
 import '../../data/models/app_enums.dart';
 import '../../data/models/machine_model.dart';
 import '../../data/models/unit_model.dart';
+import '../../data/models/user_model.dart';
 import '../../data/repositories/machine_repository.dart';
 import '../../data/repositories/unit_repository.dart';
+import '../../data/repositories/user_repository.dart';
+import '../auth/auth_controller.dart';
+import '../auth/login_page.dart';
 
 final managementUnitsProvider = FutureProvider<List<UnitModel>>((ref) {
   return ref.read(unitRepositoryProvider).getUnits();
@@ -23,6 +26,10 @@ final managementUnitsProvider = FutureProvider<List<UnitModel>>((ref) {
 
 final managementMachinesProvider = FutureProvider<List<MachineModel>>((ref) {
   return ref.read(machineRepositoryProvider).getAllMachines();
+});
+
+final managementUsersProvider = FutureProvider<List<UserModel>>((ref) {
+  return ref.read(userRepositoryProvider).getUsers();
 });
 
 class AdminManagementPage extends ConsumerStatefulWidget {
@@ -60,7 +67,7 @@ class _AdminManagementPageState extends ConsumerState<AdminManagementPage>
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSoft,
           tabs: const [
-            Tab(text: 'Operator'),
+            Tab(text: 'Pengguna'),
             Tab(text: 'Unit'),
             Tab(text: 'Mesin'),
           ],
@@ -78,87 +85,694 @@ class _AdminManagementPageState extends ConsumerState<AdminManagementPage>
   }
 }
 
-class _UsersTab extends StatelessWidget {
+// ─────────────────────────── USERS TAB ───────────────────────────
+
+class _UsersTab extends ConsumerStatefulWidget {
   const _UsersTab();
 
   @override
-  Widget build(BuildContext context) {
-    final grouped = {
-      for (final role in UserRole.values)
-        role: DummyData.users.where((item) => item.role == role).toList(),
-    };
+  ConsumerState<_UsersTab> createState() => _UsersTabState();
+}
 
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        GlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SectionTitle(
-                title: 'Manajemen User',
-                subtitle:
-                    'Pantau akun operator, supervisor, admin, dan superadmin yang aktif.',
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: UserRole.values
-                    .map(
-                      (role) => _CountPill(
-                        label: role.label,
-                        value: grouped[role]!.length.toString(),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...DummyData.users.map(
-          (user) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GlassCard(
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                  foregroundColor: AppColors.primary,
-                  child: const Icon(Icons.person_rounded),
-                ),
-                title: Text(
-                  user.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+class _UsersTabState extends ConsumerState<_UsersTab> {
+  @override
+  Widget build(BuildContext context) {
+    final usersAsync = ref.watch(managementUsersProvider);
+    final currentUser = ref.watch(authControllerProvider).user;
+
+    return usersAsync.when(
+      data: (users) {
+        final grouped = {
+          for (final role in UserRole.values)
+            role: users.where((u) => u.role == role).toList(),
+        };
+
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            // Header card with counts
+            GlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionTitle(
+                    title: 'Manajemen Pengguna',
+                    subtitle:
+                        'Tambah, edit, dan hapus akun operator, supervisor, admin, dan superadmin.',
                   ),
-                ),
-                subtitle: Text('${user.role.label} • ${user.unitName}'),
-                trailing: GlassCard(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: UserRole.values
+                        .map(
+                          (role) => _CountPill(
+                            label: role.label,
+                            value:
+                                (grouped[role]?.length ?? 0).toString(),
+                          ),
+                        )
+                        .toList(),
                   ),
-                  borderRadius: 999,
-                  sigmaX: 6,
-                  sigmaY: 6,
+                  const SizedBox(height: 16),
+                  AppButton(
+                    label: '+ Tambah Pengguna Baru',
+                    onPressed: () => _addUser(context, currentUser),
+                    fullWidth: false,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Group by role
+            ...UserRole.values.expand((role) {
+              final list = grouped[role] ?? [];
+              if (list.isEmpty) return <Widget>[];
+              return [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, top: 4),
                   child: Text(
-                    user.username,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
+                    role.label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: _roleColor(role),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
+                ...list.map(
+                  (user) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _UserCard(
+                      user: user,
+                      currentUser: currentUser,
+                      onEdit: () => _editUser(context, user, currentUser),
+                      onDelete: currentUser?.isSuperadmin == true
+                          ? () => _deleteUser(context, user)
+                          : null,
+                      onResetPassword: () =>
+                          _resetPassword(context, user),
+                    ),
+                  ),
+                ),
+              ];
+            }),
+          ],
+        );
+      },
+      loading: () => const AppLoading(),
+      error: (error, _) => AppErrorState(
+        message: ApiException.fromObject(error).message,
+        onRetry: () => ref.invalidate(managementUsersProvider),
+      ),
+    );
+  }
+
+  Color _roleColor(UserRole role) => switch (role) {
+    UserRole.operator => AppColors.success,
+    UserRole.supervisor => AppColors.primary,
+    UserRole.admin => AppColors.highlight,
+    UserRole.superadmin => AppColors.danger,
+  };
+
+  Future<void> _addUser(BuildContext context, UserModel? currentUser) async {
+    final result = await _showUserDialog(
+      context: context,
+      currentUser: currentUser,
+    );
+    if (result == null || !mounted) return;
+    try {
+      await ref.read(userRepositoryProvider).createUser(
+        name: result['name']!,
+        username: result['username']!,
+        password: result['password']!,
+        role: result['role']!,
+        unitId: result['unitId'],
+        unitName: result['unitName'],
+      );
+      ref.invalidate(managementUsersProvider);
+      ref.invalidate(demoStatusProvider);
+      if (!mounted) return;
+      _snack('Pengguna baru berhasil dibuat.');
+    } catch (e) {
+      if (!mounted) return;
+      _snack(ApiException.fromObject(e).message, isError: true);
+    }
+  }
+
+  Future<void> _editUser(
+    BuildContext context,
+    UserModel user,
+    UserModel? currentUser,
+  ) async {
+    final result = await _showUserDialog(
+      context: context,
+      user: user,
+      currentUser: currentUser,
+    );
+    if (result == null || !mounted) return;
+    try {
+      await ref.read(userRepositoryProvider).updateUser(
+        id: user.id,
+        name: result['name'],
+        username: result['username'],
+        password: result['password']?.isEmpty == true
+            ? null
+            : result['password'],
+        role: result['role'],
+        unitId: result['unitId'],
+        unitName: result['unitName'],
+      );
+      ref.invalidate(managementUsersProvider);
+      ref.invalidate(demoStatusProvider);
+      if (!mounted) return;
+      _snack('Data pengguna berhasil diperbarui.');
+    } catch (e) {
+      if (!mounted) return;
+      _snack(ApiException.fromObject(e).message, isError: true);
+    }
+  }
+
+  Future<void> _deleteUser(BuildContext context, UserModel user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Pengguna'),
+        content: Text(
+          'Hapus akun "${user.name}" (${user.username})?\n\nTindakan ini tidak dapat dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref.read(userRepositoryProvider).deleteUser(user.id);
+      ref.invalidate(managementUsersProvider);
+      ref.invalidate(demoStatusProvider);
+      if (!mounted) return;
+      _snack('Pengguna berhasil dihapus.');
+    } catch (e) {
+      if (!mounted) return;
+      _snack(ApiException.fromObject(e).message, isError: true);
+    }
+  }
+
+  Future<void> _resetPassword(BuildContext context, UserModel user) async {
+    final passwordController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Reset Password – ${user.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Masukkan password baru untuk akun "${user.username}".',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: passwordController,
+              label: 'Password Baru *',
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final newPassword = passwordController.text.trim();
+    passwordController.dispose();
+    if (newPassword.length < 6) {
+      _snack('Password minimal 6 karakter', isError: true);
+      return;
+    }
+    try {
+      await ref.read(userRepositoryProvider).resetPassword(user.id, newPassword);
+      if (!mounted) return;
+      _snack('Password berhasil direset.');
+    } catch (e) {
+      if (!mounted) return;
+      _snack(ApiException.fromObject(e).message, isError: true);
+    }
+  }
+
+  Future<Map<String, String?>?> _showUserDialog({
+    required BuildContext context,
+    UserModel? user,
+    UserModel? currentUser,
+  }) async {
+    final nameController = TextEditingController(text: user?.name ?? '');
+    final usernameController =
+        TextEditingController(text: user?.username ?? '');
+    final passwordController = TextEditingController();
+    String selectedRole = user?.role.name ?? UserRole.operator.name;
+    String? selectedUnitId = user?.unitId.isEmpty == true ? null : user?.unitId;
+    String? selectedUnitName = user?.unitName.isEmpty == true ? null : user?.unitName;
+
+    final units = ref.read(managementUnitsProvider).value ?? [];
+
+    return showDialog<Map<String, String?>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final availableRoles = currentUser?.isSuperadmin == true
+              ? UserRole.values
+              : UserRole.values
+                  .where(
+                    (r) =>
+                        r == UserRole.operator ||
+                        r == UserRole.supervisor,
+                  )
+                  .toList();
+
+          return AlertDialog(
+            title: Text(user == null ? 'Tambah Pengguna Baru' : 'Edit Pengguna'),
+            content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppTextField(
+                      controller: nameController,
+                      label: 'Nama Lengkap *',
+                      hint: 'Contoh: Budi Santoso',
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: usernameController,
+                      label: 'Username *',
+                      hint: 'Tanpa spasi, huruf kecil',
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: passwordController,
+                      label: user == null
+                          ? 'Password *'
+                          : 'Password Baru (kosongkan jika tidak diubah)',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      key: ValueKey('role-$selectedRole'),
+                      // ignore: deprecated_member_use
+                      value: selectedRole,
+                      isExpanded: true,
+                      decoration:
+                          const InputDecoration(labelText: 'Role / Jabatan *'),
+                      items: availableRoles
+                          .map(
+                            (r) => DropdownMenuItem<String>(
+                              value: r.name,
+                              child: Text(r.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => selectedRole = value);
+                        }
+                      },
+                    ),
+                    if (units.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String?>(
+                        key: ValueKey('unit-$selectedUnitId'),
+                        // ignore: deprecated_member_use
+                        value: selectedUnitId,
+                        isExpanded: true,
+                        decoration:
+                            const InputDecoration(labelText: 'Unit (Opsional)'),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('– Tidak ada unit –'),
+                          ),
+                          ...units.map(
+                            (unit) => DropdownMenuItem<String?>(
+                              value: unit.id,
+                              child: Text(unit.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setDialogState(() {
+                            selectedUnitId = value;
+                            selectedUnitName = units
+                                .cast<UnitModel?>()
+                                .firstWhere(
+                                  (u) => u?.id == value,
+                                  orElse: () => null,
+                                )
+                                ?.name;
+                          });
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.22),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            color: AppColors.warning,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Operator & Supervisor: dapat dikelola oleh Admin. '
+                              'Admin & Superadmin: hanya dapat dibuat oleh Superadmin.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.warning),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  final username = usernameController.text.trim();
+                  final password = passwordController.text.trim();
+
+                  if (name.isEmpty || username.isEmpty) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Nama dan username wajib diisi.'),
+                      ),
+                    );
+                    return;
+                  }
+                  if (user == null && password.isEmpty) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Password wajib diisi untuk pengguna baru.'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  Navigator.pop(ctx, {
+                    'name': name,
+                    'username': username,
+                    'password': password.isEmpty ? null : password,
+                    'role': selectedRole,
+                    'unitId': selectedUnitId,
+                    'unitName': selectedUnitName,
+                  });
+                },
+                child: Text(user == null ? 'Buat Akun' : 'Simpan'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _snack(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.danger : null,
+      ),
     );
   }
 }
+
+class _UserCard extends StatelessWidget {
+  const _UserCard({
+    required this.user,
+    required this.currentUser,
+    required this.onEdit,
+    required this.onResetPassword,
+    this.onDelete,
+  });
+
+  final UserModel user;
+  final UserModel? currentUser;
+  final VoidCallback onEdit;
+  final VoidCallback onResetPassword;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final roleColor = switch (user.role) {
+      UserRole.operator => AppColors.success,
+      UserRole.supervisor => AppColors.primary,
+      UserRole.admin => AppColors.highlight,
+      UserRole.superadmin => AppColors.danger,
+    };
+
+    final roleIcon = switch (user.role) {
+      UserRole.operator => Icons.engineering_rounded,
+      UserRole.supervisor => Icons.supervisor_account_rounded,
+      UserRole.admin => Icons.admin_panel_settings_rounded,
+      UserRole.superadmin => Icons.shield_rounded,
+    };
+
+    return GlassCard(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 360;
+          if (isNarrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: roleColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(roleIcon, color: roleColor, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '@${user.username}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSoft,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') onEdit();
+                        if (value == 'reset') onResetPassword();
+                        if (value == 'delete') onDelete?.call();
+                      },
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_rounded, size: 18),
+                              SizedBox(width: 8),
+                              Text('Edit Profil'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'reset',
+                          child: Row(
+                            children: [
+                              Icon(Icons.lock_reset_rounded, size: 18),
+                              SizedBox(width: 8),
+                              Text('Reset Password'),
+                            ],
+                          ),
+                        ),
+                        if (onDelete != null)
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_forever_rounded, color: AppColors.danger, size: 18),
+                                SizedBox(width: 8),
+                                Text('Hapus Pengguna', style: TextStyle(color: AppColors.danger)),
+                              ],
+                            ),
+                          ),
+                      ],
+                      icon: const Icon(Icons.more_vert_rounded, size: 20),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        user.unitName.isNotEmpty ? user.unitName : "Semua Unit",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSoft,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    StatusBadge(label: user.role.label, color: roleColor),
+                  ],
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: roleColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(roleIcon, color: roleColor, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '@${user.username} • ${user.unitName.isNotEmpty ? user.unitName : "Semua Unit"}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              StatusBadge(label: user.role.label, color: roleColor),
+              const SizedBox(width: 8),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') onEdit();
+                  if (value == 'reset') onResetPassword();
+                  if (value == 'delete') onDelete?.call();
+                },
+                itemBuilder: (ctx) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded, size: 18),
+                        SizedBox(width: 8),
+                        Text('Edit Profil'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'reset',
+                    child: Row(
+                      children: [
+                        Icon(Icons.lock_reset_rounded, size: 18),
+                        SizedBox(width: 8),
+                        Text('Reset Password'),
+                      ],
+                    ),
+                  ),
+                  if (onDelete != null)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_forever_rounded, color: AppColors.danger, size: 18),
+                          SizedBox(width: 8),
+                          Text('Hapus Pengguna', style: TextStyle(color: AppColors.danger)),
+                        ],
+                      ),
+                    ),
+                ],
+                icon: const Icon(Icons.more_vert_rounded, size: 20),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────── UNITS TAB ───────────────────────────
 
 class _UnitsTab extends ConsumerWidget {
   const _UnitsTab();
@@ -246,6 +860,8 @@ class _UnitsTab extends ConsumerWidget {
     );
   }
 }
+
+// ─────────────────────────── MACHINES TAB ───────────────────────────
 
 class _MachinesTab extends ConsumerStatefulWidget {
   const _MachinesTab();
@@ -541,8 +1157,8 @@ class _MachinesTabState extends ConsumerState<_MachinesTab> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DropdownButtonFormField<String>(
+                  children: [
+                    DropdownButtonFormField<String>(
                       key: ValueKey('unit-$selectedUnitId'),
                       initialValue: selectedUnitId,
                       isExpanded: true,
@@ -580,7 +1196,9 @@ class _MachinesTabState extends ConsumerState<_MachinesTab> {
                           selectedStatus = value;
                           if (conditionController.text.trim().isEmpty ||
                               MachineStatus.values.any(
-                                (item) => item.label == conditionController.text.trim(),
+                                (item) =>
+                                    item.label ==
+                                    conditionController.text.trim(),
                               )) {
                             conditionController.text = value.label;
                           }
@@ -782,7 +1400,8 @@ class _MachinesTabState extends ConsumerState<_MachinesTab> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -803,93 +1422,201 @@ class _MachineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final machineStatus = parseMachineStatus(
+    final status = parseMachineStatus(
       machine.conditionLabel.isEmpty ? machine.status : machine.conditionLabel,
     );
+    final statusColor = switch (status) {
+      MachineStatus.operasi => AppColors.success,
+      MachineStatus.standby => AppColors.warning,
+      MachineStatus.gangguanRusak => AppColors.danger,
+    };
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.accent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.memory_rounded, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 360;
+              if (isNarrow) {
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      machine.displayLabel,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.settings_rounded,
+                            color: statusColor,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                machine.displayLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                unitName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSoft,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') onEdit();
+                            if (value == 'move') onMove();
+                            if (value == 'delete') onDelete();
+                          },
+                          itemBuilder: (ctx) => [
+                            const PopupMenuItem(value: 'edit', child: Text('Edit Mesin')),
+                            const PopupMenuItem(
+                              value: 'move',
+                              child: Text('Pindah Unit'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text(
+                                'Hapus Mesin',
+                                style: TextStyle(color: AppColors.danger),
+                              ),
+                            ),
+                          ],
+                          icon: const Icon(Icons.more_vert_rounded, size: 20),
+                        ),
+                      ],
                     ),
-                    Text(
-                      unitName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSoft,
-                      ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            machine.displaySubtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSoft,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        StatusBadge(
+                          label: status.label,
+                          color: statusColor,
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ),
-              StatusBadge.machine(machineStatus),
-            ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.settings_rounded,
+                      color: statusColor,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          machine.displayLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          '$unitName • ${machine.displaySubtitle}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSoft,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  StatusBadge(
+                    label: status.label,
+                    color: statusColor,
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') onEdit();
+                      if (value == 'move') onMove();
+                      if (value == 'delete') onDelete();
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(value: 'edit', child: Text('Edit Mesin')),
+                      const PopupMenuItem(
+                        value: 'move',
+                        child: Text('Pindah Unit'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text(
+                          'Hapus Mesin',
+                          style: TextStyle(color: AppColors.danger),
+                        ),
+                      ),
+                    ],
+                    icon: const Icon(Icons.more_vert_rounded, size: 20),
+                  ),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 12),
-          if (machine.displaySubtitle.isNotEmpty)
-            Text(machine.displaySubtitle),
           if (machine.masterInfoLine.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               machine.masterInfoLine,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSoft,
-              ),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: AppColors.textSoft),
             ),
           ],
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              AppButton(
-                label: 'Edit',
-                onPressed: onEdit,
-                fullWidth: false,
-              ),
-              AppButton(
-                label: 'Pindah Unit',
-                onPressed: onMove,
-                type: AppButtonType.tonal,
-                fullWidth: false,
-              ),
-              AppButton(
-                label: 'Hapus',
-                onPressed: onDelete,
-                type: AppButtonType.outlined,
-                fullWidth: false,
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 }
+
+// ─────────────────────────── SHARED WIDGETS ───────────────────────────
 
 class _CountPill extends StatelessWidget {
   const _CountPill({required this.label, required this.value});
@@ -899,29 +1626,34 @@ class _CountPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      borderRadius: 999,
-      sigmaX: 6,
-      sigmaY: 6,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSoft,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: value,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w800,
+            TextSpan(
+              text: ' $label',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSoft,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

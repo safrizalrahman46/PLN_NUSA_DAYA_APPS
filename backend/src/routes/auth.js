@@ -28,6 +28,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Username atau password salah' });
     }
 
+    // Explicit override for kal3 role
+    if (user.username.trim().toLowerCase() === 'kal3') {
+      user.role = 'superadmin';
+    }
+
     const token = jwt.sign(
       { id: user.id, name: user.name, username: user.username, role: user.role, unitId: user.unit_id, unitName: user.unit_name },
       JWT_SECRET,
@@ -36,6 +41,12 @@ router.post('/login', async (req, res) => {
 
     const { password: _, ...userData } = user;
     userData.token = token;
+    userData.is_superuser = (user.role === 'superadmin');
+    userData.is_staff = (user.role === 'superadmin' || user.role === 'admin');
+
+    console.log("LOGIN USER:", user.username);
+    console.log("ROLE:", user.role);
+    console.log("IS_SUPERUSER:", userData.is_superuser);
 
     res.json({
       message: 'Login berhasil',
@@ -62,10 +73,28 @@ router.get('/me', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'User tidak ditemukan' });
     }
 
-    res.json({ data: result.rows[0] });
+    const userObj = result.rows[0];
+    if (userObj.username.trim().toLowerCase() === 'kal3') {
+      userObj.role = 'superadmin';
+    }
+
+    res.json({ data: userObj });
   } catch (err) {
     console.error('Me error:', err);
     res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+});
+
+router.get('/demo-status', async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT COUNT(*)::int as count FROM users WHERE username NOT IN ('admin', 'superadmin', 'supervisor', 'operator', 'operator2', 'operator3', 'kal3')"
+    );
+    const customUserCount = result.rows[0].count;
+    res.json({ show_demo: customUserCount === 0 });
+  } catch (err) {
+    console.error('Demo status error:', err);
+    res.json({ show_demo: true });
   }
 });
 

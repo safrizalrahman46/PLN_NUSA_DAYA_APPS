@@ -12,6 +12,8 @@ const logsheetsRoutes = require('./routes/logsheets');
 const supervisorRoutes = require('./routes/supervisor');
 const notificationsRoutes = require('./routes/notifications');
 const reportsRoutes = require('./routes/reports');
+const usersRoutes = require('./routes/users');
+const digikitRoutes = require('./routes/digikit');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -30,6 +32,8 @@ app.use('/api/logsheets', logsheetsRoutes);
 app.use('/api/supervisor', supervisorRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api', digikitRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

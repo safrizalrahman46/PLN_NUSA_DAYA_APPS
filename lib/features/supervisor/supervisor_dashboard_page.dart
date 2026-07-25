@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'logsheet_approval_page.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/network/network_info.dart';
@@ -92,7 +93,23 @@ class _SupervisorDashboardPageState
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard Supervisor')),
+      appBar: AppBar(
+        title: const Text('Dashboard Supervisor'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.rate_review_rounded),
+            tooltip: 'Persetujuan Logsheet',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const LogsheetApprovalPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(

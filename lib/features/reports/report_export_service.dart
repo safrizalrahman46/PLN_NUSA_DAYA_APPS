@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
-
+import '../../core/utils/file_exporter.dart';
 import '../../data/models/app_enums.dart';
 import '../../data/models/logsheet_model.dart';
 
@@ -30,24 +28,21 @@ class ReportExportPayload {
 class ReportExportService {
   Future<void> sharePdf(ReportExportPayload payload) async {
     final bytes = await _buildPdfBytes(payload);
-    await Printing.sharePdf(
+    await saveAndShareFile(
       bytes: bytes,
       filename: '${payload.fileNameBase}.pdf',
+      mimeType: 'application/pdf',
+      shareText: 'Laporan PLN Nusa Daya ${payload.periodLabel}',
     );
   }
 
   Future<void> shareExcel(ReportExportPayload payload) async {
     final bytes = await _buildExcelBytes(payload);
-    await Share.shareXFiles(
-      [
-        XFile.fromData(
-          bytes,
-          mimeType:
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          name: '${payload.fileNameBase}.xlsx',
-        ),
-      ],
-      text: 'Laporan PLN Nusa Daya ${payload.periodLabel}',
+    await saveAndShareFile(
+      bytes: bytes,
+      filename: '${payload.fileNameBase}.xlsx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      shareText: 'Laporan PLN Nusa Daya ${payload.periodLabel}',
     );
   }
 
@@ -172,24 +167,26 @@ class ReportExportService {
 
   Future<Uint8List> _buildExcelBytes(ReportExportPayload payload) async {
     final excel = Excel.createExcel();
-    final sheet = excel['Laporan'];
-    sheet.appendRow([
+
+    // 1. RAW DATA SHEET ("Laporan")
+    final rawSheet = excel['Laporan'];
+    rawSheet.appendRow([
       TextCellValue('Laporan PLN Nusa Daya'),
     ]);
-    sheet.appendRow([
+    rawSheet.appendRow([
       TextCellValue('Periode'),
       TextCellValue(payload.periodLabel),
     ]);
-    sheet.appendRow([
+    rawSheet.appendRow([
       TextCellValue('Rentang'),
       TextCellValue(payload.dateRangeLabel),
     ]);
-    sheet.appendRow([
+    rawSheet.appendRow([
       TextCellValue('Dicetak oleh'),
       TextCellValue(payload.exportedBy),
     ]);
-    sheet.appendRow(<CellValue>[]);
-    sheet.appendRow([
+    rawSheet.appendRow(<CellValue>[]);
+    rawSheet.appendRow([
       TextCellValue('Tanggal'),
       TextCellValue('Unit'),
       TextCellValue('Operator'),
@@ -218,7 +215,7 @@ class ReportExportService {
 
     final dateFormat = DateFormat('dd-MM-yyyy HH:mm', 'id_ID');
     for (final item in payload.records) {
-      sheet.appendRow([
+      rawSheet.appendRow([
         TextCellValue(dateFormat.format(item.submittedAt)),
         TextCellValue(item.unitName),
         TextCellValue(item.operatorName),
@@ -244,6 +241,104 @@ class ReportExportService {
         TextCellValue(item.notes),
         TextCellValue(item.abnormalNotes),
       ]);
+    }
+
+    // 2. GENERATE PIVOT DATA FOR SYSTEM & UNITS (similar to reference format)
+    final dateOnlyFormat = DateFormat('yyyy-MM-dd');
+    final uniqueDates = payload.records
+        .map((r) => dateOnlyFormat.format(r.submittedAt))
+        .toSet()
+        .toList()
+      ..sort();
+
+    final uniqueUnits = payload.records.map((r) => r.unitName).toSet().toList()..sort();
+
+    // Group structure: unitName -> dateString -> hourInt -> sum(bebanMesin)
+    final Map<String, Map<String, Map<int, double>>> unitData = {};
+    for (final unit in uniqueUnits) {
+      unitData[unit] = {};
+      for (final date in uniqueDates) {
+        unitData[unit]![date] = {for (int h = 0; h < 24; h++) h: 0.0};
+      }
+    }
+
+    for (final record in payload.records) {
+      final dateStr = dateOnlyFormat.format(record.submittedAt);
+      final hour = record.submittedAt.hour;
+      final unit = record.unitName;
+      if (unitData.containsKey(unit) && unitData[unit]!.containsKey(dateStr)) {
+        unitData[unit]![dateStr]![hour] = (unitData[unit]![dateStr]![hour] ?? 0.0) + record.bebanMesin;
+      }
+    }
+
+    // A. Generate Individual Unit Sheets
+    for (final unit in uniqueUnits) {
+      final safeSheetName = unit.length > 30 ? unit.substring(0, 30) : unit;
+      final unitSheet = excel[safeSheetName];
+
+      final List<CellValue> headers = [
+        TextCellValue('JAM'),
+        for (int h = 0; h < 24; h++) TextCellValue('${h.toString().padLeft(2, '0')}:00'),
+        TextCellValue(''),
+        TextCellValue('MAX'),
+        TextCellValue('MIN'),
+      ];
+      unitSheet.appendRow(headers);
+
+      for (final date in uniqueDates) {
+        final hoursMap = unitData[unit]![date]!;
+        final List<double> values = [];
+        for (int h = 0; h < 24; h++) {
+          values.add(hoursMap[h] ?? 0.0);
+        }
+        final maxVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a > b ? a : b);
+        final minVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a < b ? a : b);
+
+        final List<CellValue> rowCells = [
+          TextCellValue(date),
+          for (final val in values) TextCellValue(val.toStringAsFixed(2)),
+          TextCellValue(''),
+          TextCellValue(maxVal.toStringAsFixed(2)),
+          TextCellValue(minVal.toStringAsFixed(2)),
+        ];
+        unitSheet.appendRow(rowCells);
+      }
+    }
+
+    // B. Generate TOTAL SISTEM Sheet
+    if (uniqueUnits.isNotEmpty) {
+      final totalSheet = excel['TOTAL SISTEM'];
+
+      final List<CellValue> headers = [
+        TextCellValue('JAM'),
+        for (int h = 0; h < 24; h++) TextCellValue('${h.toString().padLeft(2, '0')}:00'),
+        TextCellValue(''),
+        TextCellValue('MAX'),
+        TextCellValue('MIN'),
+      ];
+      totalSheet.appendRow(headers);
+
+      for (final date in uniqueDates) {
+        final List<double> values = List.filled(24, 0.0);
+        for (int h = 0; h < 24; h++) {
+          double sum = 0.0;
+          for (final unit in uniqueUnits) {
+            sum += unitData[unit]![date]![h] ?? 0.0;
+          }
+          values[h] = sum;
+        }
+        final maxVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a > b ? a : b);
+        final minVal = values.isEmpty ? 0.0 : values.reduce((a, b) => a < b ? a : b);
+
+        final List<CellValue> rowCells = [
+          TextCellValue(date),
+          for (final val in values) TextCellValue(val.toStringAsFixed(2)),
+          TextCellValue(''),
+          TextCellValue(maxVal.toStringAsFixed(2)),
+          TextCellValue(minVal.toStringAsFixed(2)),
+        ];
+        totalSheet.appendRow(rowCells);
+      }
     }
 
     final bytes = excel.encode();

@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'dio_client.dart';
-
 final networkInfoProvider = Provider<NetworkInfo>((ref) {
-  final info = NetworkInfo(ref.read(dioProvider));
+  final info = NetworkInfo();
   ref.onDispose(info.dispose);
   return info;
 });
@@ -17,7 +14,7 @@ final networkStatusProvider = StreamProvider<bool>((ref) {
 });
 
 class NetworkInfo {
-  NetworkInfo(this._dio) {
+  NetworkInfo() {
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
       _handleConnectivityChanged,
     );
@@ -25,7 +22,6 @@ class NetworkInfo {
   }
 
   final Connectivity _connectivity = Connectivity();
-  final Dio _dio;
   final _controller = StreamController<bool>.broadcast();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   Timer? _debounceTimer;
@@ -40,10 +36,18 @@ class NetworkInfo {
       return _lastStatus!;
     }
 
-    final result = await _connectivity.checkConnectivity();
-    final connected = await _resolveConnectivity(result);
-    _emitIfChanged(connected, force: true);
-    return connected;
+    try {
+      final result = await _connectivity.checkConnectivity().timeout(
+        const Duration(milliseconds: 1500),
+        onTimeout: () => [ConnectivityResult.none],
+      );
+      final connected = await _resolveConnectivity(result);
+      _emitIfChanged(connected, force: true);
+      return connected;
+    } catch (_) {
+      _emitIfChanged(false, force: true);
+      return false;
+    }
   }
 
   Stream<bool> get onConnectivityChanged async* {
@@ -54,9 +58,16 @@ class NetworkInfo {
   }
 
   Future<void> _refreshInitialStatus() async {
-    final result = await _connectivity.checkConnectivity();
-    final connected = await _resolveConnectivity(result);
-    _emitIfChanged(connected, force: true);
+    try {
+      final result = await _connectivity.checkConnectivity().timeout(
+        const Duration(milliseconds: 1500),
+        onTimeout: () => [ConnectivityResult.none],
+      );
+      final connected = await _resolveConnectivity(result);
+      _emitIfChanged(connected, force: true);
+    } catch (_) {
+      _emitIfChanged(false, force: true);
+    }
   }
 
   void _handleConnectivityChanged(List<ConnectivityResult> result) {
@@ -71,24 +82,7 @@ class NetworkInfo {
     if (!result.any((item) => item != ConnectivityResult.none)) {
       return false;
     }
-
-    try {
-      final response = await _dio.get(
-        '/units',
-        queryParameters: const {'limit': 1},
-        options: Options(
-          sendTimeout: const Duration(seconds: 3),
-          receiveTimeout: const Duration(seconds: 3),
-          validateStatus: (_) => true,
-        ),
-      );
-      final statusCode = response.statusCode ?? 0;
-      return statusCode > 0 && statusCode < 500;
-    } on DioException catch (error) {
-      return error.response?.statusCode != null;
-    } catch (_) {
-      return false;
-    }
+    return true;
   }
 
   void _emitIfChanged(bool connected, {bool force = false}) {

@@ -11,7 +11,7 @@ class HiveService {
   HiveService._();
 
   static final HiveService instance = HiveService._();
-  static const currentSeedVersion = 3;
+  static const currentSeedVersion = 4;
 
   static const settingsBoxName = 'settings_box';
   static const cacheBoxName = 'cache_box';
@@ -21,6 +21,7 @@ class HiveService {
   static const auditLogBoxName = 'audit_log_box';
   static const archiveBoxName = 'archive_box';
   static const retentionLogBoxName = 'retention_log_box';
+  static const usersBoxName = 'users_box';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -32,6 +33,7 @@ class HiveService {
     await Hive.openBox<dynamic>(auditLogBoxName);
     await Hive.openBox<dynamic>(archiveBoxName);
     await Hive.openBox<dynamic>(retentionLogBoxName);
+    await Hive.openBox<dynamic>(usersBoxName);
     await _seedIfNeeded();
     await _ensureDefaultSettings();
   }
@@ -44,17 +46,49 @@ class HiveService {
   Box<dynamic> get auditLogBox => Hive.box<dynamic>(auditLogBoxName);
   Box<dynamic> get archiveBox => Hive.box<dynamic>(archiveBoxName);
   Box<dynamic> get retentionLogBox => Hive.box<dynamic>(retentionLogBoxName);
+  Box<dynamic> get usersBox => Hive.box<dynamic>(usersBoxName);
 
   Future<void> _seedIfNeeded() async {
     final seeded = settingsBox.get('seeded') == true;
     final seedVersion = settingsBox.get('seed_version', defaultValue: 0) as int;
 
-    if (!seeded || seedVersion != currentSeedVersion) {
+    if (!seeded || seedVersion != currentSeedVersion || usersBox.isEmpty) {
       await cacheBox.clear();
       await logsheetBox.clear();
+      
+      // Preserve custom users that are not in default DummyData.users
+      final List<dynamic> customUsers = [];
+      final List<String> defaultUsernames = DummyData.users.map((u) => u.username).toList();
+      
+      for (final key in usersBox.keys) {
+        final val = usersBox.get(key);
+        if (val is Map) {
+          final username = val['username']?.toString();
+          if (username != null && !defaultUsernames.contains(username)) {
+            customUsers.add(val);
+          }
+        }
+      }
+
+      await usersBox.clear();
+      
       for (final item in DummyData.seedLogsheets()) {
         await logsheetBox.put(item.localId, item.toJson());
       }
+      
+      // Insert default dummy users
+      for (final item in DummyData.users) {
+        await usersBox.put(item.username, item.toJson());
+      }
+
+      // Re-insert custom users
+      for (final rawUser in customUsers) {
+        final username = rawUser['username']?.toString();
+        if (username != null) {
+          await usersBox.put(username, rawUser);
+        }
+      }
+
       await settingsBox.put('seeded', true);
       await settingsBox.put('seed_version', currentSeedVersion);
       if (!seeded) {

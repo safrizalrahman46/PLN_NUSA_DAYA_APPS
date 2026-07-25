@@ -169,13 +169,13 @@ class DummyData {
       token: 'token-admin',
     ),
     UserModel(
-      id: 'SA1',
-      name: 'Superadmin PLN Nusa Daya',
-      username: 'superadmin',
+      id: 'SA_KAL3',
+      name: 'Superadmin KAL 3',
+      username: 'kal3',
       role: UserRole.superadmin,
       unitId: 'ALL',
       unitName: 'Semua Unit PLTD',
-      token: 'token-superadmin',
+      token: 'token-superadmin-kal3',
     ),
   ];
 
@@ -183,10 +183,15 @@ class DummyData {
       machines.where((item) => item.unitId == unitId).toList();
 
   static UserModel? authenticate(String username, String password) {
-    if (password.trim() != '123') return null;
+    final u = username.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+    final p = password.trim();
+    if ((u == 'kal3' || u == 'testkal3') && p == 'password') {
+      return users.firstWhere((user) => user.username == 'kal3');
+    }
+    if (p != '123') return null;
     try {
       return users.firstWhere(
-        (user) => user.username == username.trim().toLowerCase(),
+        (user) => user.username.replaceAll(RegExp(r'\s+'), '').toLowerCase() == u,
       );
     } catch (_) {
       return null;
@@ -242,11 +247,7 @@ class DummyData {
       final reportStatus = abnormal
           ? ReportStatus.abnormal
           : (index % 8 == 0 ? ReportStatus.late : ReportStatus.onTime);
-      final syncStatus = index % 11 == 0
-          ? SyncStatus.pendingSync
-          : index % 17 == 0
-          ? SyncStatus.failed
-          : SyncStatus.synced;
+      final syncStatus = SyncStatus.synced;
       final locationStatus = index % 21 == 0
           ? LocationStatus.outsideArea
           : index % 37 == 0

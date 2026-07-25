@@ -16,11 +16,11 @@ import '../../data/repositories/machine_repository.dart';
 import '../history/logsheet_detail_page.dart';
 import '../logsheet/input_logsheet_page.dart';
 
-final unitMachinesProvider = FutureProvider.family<List<MachineModel>, String>((
+final unitMachinesProvider = FutureProvider.family<List<MachineModel>, UnitModel>((
   ref,
-  unitId,
+  unit,
 ) {
-  return ref.read(machineRepositoryProvider).getMachines(unitId);
+  return ref.read(machineRepositoryProvider).getMachinesForUnit(unit);
 });
 
 final unitLogsProvider = FutureProvider.family<List<LogsheetModel>, String>((
@@ -43,7 +43,7 @@ class UnitDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final machines = ref.watch(unitMachinesProvider(unit.id));
+    final machines = ref.watch(unitMachinesProvider(unit));
     final logs = ref.watch(unitLogsProvider(unit.id));
     final errorCount = ref.watch(unitErrorCountProvider(unit.id));
 

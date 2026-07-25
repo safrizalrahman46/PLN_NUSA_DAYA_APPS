@@ -13,6 +13,30 @@ import '../../data/models/user_model.dart';
 import 'auth_controller.dart';
 import 'widgets/login_form.dart';
 import 'widgets/login_header.dart';
+import '../../data/local/hive_service.dart';
+
+final demoStatusProvider = FutureProvider<bool>((ref) async {
+  try {
+    final hive = ref.read(hiveServiceProvider);
+    final box = hive.usersBox;
+    
+    final defaultUsernames = [
+      'operator', 'operator.krayan', 'operator.tanahmerah', 'operator.longpeso', 
+      'operator.longlayu', 'operator.site07', 'supervisor', 'admin', 'superadmin', 'kal3'
+    ];
+    
+    int customCount = 0;
+    for (final key in box.keys) {
+      if (!defaultUsernames.contains(key.toString())) {
+        customCount++;
+      }
+    }
+    
+    return customCount == 0;
+  } catch (_) {
+    return true;
+  }
+});
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -24,8 +48,8 @@ class LoginPage extends ConsumerStatefulWidget {
 class _LoginPageState extends ConsumerState<LoginPage>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(text: 'operator');
-  final _passwordController = TextEditingController(text: '123');
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
   var _obscurePassword = true;
 
   // Animation controllers
@@ -100,13 +124,19 @@ class _LoginPageState extends ConsumerState<LoginPage>
         .login(_usernameController.text, _passwordController.text);
     if (!mounted || !success) return;
     final user = ref.read(authControllerProvider).user;
+    final shell = user?.isOperator == true
+        ? AppRoutes.operatorShell
+        : user?.isSupervisor == true
+        ? AppRoutes.supervisorShell
+        : AppRoutes.adminShell;
+
+    debugPrint('API Role: ${user?.role.name}');
+    debugPrint('Mapped Role: ${user?.role}');
+    debugPrint('Redirect To: $shell');
+
     Navigator.pushReplacementNamed(
       context,
-      user?.isOperator == true
-          ? AppRoutes.operatorShell
-          : user?.isSupervisor == true
-          ? AppRoutes.supervisorShell
-          : AppRoutes.adminShell,
+      shell,
     );
   }
 
@@ -120,6 +150,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final showDemo = ref.watch(demoStatusProvider).valueOrNull ?? true;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final demoUsers = DummyData.users
         .where(
@@ -357,83 +388,85 @@ class _LoginPageState extends ConsumerState<LoginPage>
                                     AppRoutes.forgotPassword,
                                   ),
                                 ),
-                                const SizedBox(height: 26),
-                                // Divider with label
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        height: 1,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Theme.of(context)
-                                                  .dividerColor
-                                                  .withValues(alpha: 0),
-                                              Theme.of(context).dividerColor,
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                      ),
-                                      child: Text(
-                                        'Login cepat akun demo',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: AppColors.textSoft,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.3,
+                                if (showDemo) ...[
+                                  const SizedBox(height: 26),
+                                  // Divider with label
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          height: 1,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Theme.of(context)
+                                                    .dividerColor
+                                                    .withValues(alpha: 0),
+                                                Theme.of(context).dividerColor,
+                                              ],
                                             ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        height: 1,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Theme.of(context).dividerColor,
-                                              Theme.of(context)
-                                                  .dividerColor
-                                                  .withValues(alpha: 0),
-                                            ],
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                // 2×2 role grid with staggered entrance
-                                GridView.count(
-                                  crossAxisCount: 2,
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: 2.7,
-                                  children: List.generate(
-                                    demoUsers.length,
-                                    (index) {
-                                      final user = demoUsers[index];
-                                      return _StaggeredFadeIn(
-                                        delay: Duration(
-                                          milliseconds: 600 + (index * 90),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
                                         ),
-                                        child: _RoleTile(
-                                          user: user,
-                                          onTap: () => _quickLogin(user),
+                                        child: Text(
+                                          'Login cepat akun demo',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: AppColors.textSoft,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.3,
+                                              ),
                                         ),
-                                      );
-                                    },
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: 1,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Theme.of(context).dividerColor,
+                                                Theme.of(context)
+                                                    .dividerColor
+                                                    .withValues(alpha: 0),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
+                                  const SizedBox(height: 16),
+                                  // 2×2 role grid with staggered entrance
+                                  GridView.count(
+                                    crossAxisCount: 2,
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                    childAspectRatio: 2.7,
+                                    children: List.generate(
+                                      demoUsers.length,
+                                      (index) {
+                                        final user = demoUsers[index];
+                                        return _StaggeredFadeIn(
+                                          delay: Duration(
+                                            milliseconds: 600 + (index * 90),
+                                          ),
+                                          child: _RoleTile(
+                                            user: user,
+                                            onTap: () => _quickLogin(user),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 22),
                                 Center(
                                   child: Container(

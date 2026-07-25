@@ -27,6 +27,7 @@ import '../units/unit_detail_page.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/next_report_card.dart';
 import 'widgets/quick_action_grid.dart';
+import 'widgets/report_donut_chart.dart';
 import 'widgets/summary_card.dart';
 import 'widgets/today_report_status.dart';
 import 'widgets/unit_quick_access_card.dart';
@@ -296,6 +297,31 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                     index: 5,
                     animateIn: _animateIn,
                     child: TodayReportStatus(summary: data),
+                  ),
+                  const SizedBox(height: 18),
+                  _AnimatedSection(
+                    index: 6,
+                    animateIn: _animateIn,
+                    child: GlassCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Statistik Laporan',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ReportDonutChart(
+                            success: data.successReports,
+                            pending: data.pendingSync,
+                            late: 0,
+                            abnormal: data.abnormalReports,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

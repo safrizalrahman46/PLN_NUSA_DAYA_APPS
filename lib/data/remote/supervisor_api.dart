@@ -12,7 +12,7 @@ class SupervisorApi {
     try {
       final response = await _dio.get('/supervisor/dashboard');
       return Map<String, dynamic>.from(response.data['data'] ?? response.data);
-    } on DioException {
+    } catch (_) {
       return {
         'total_units': DummyData.units.length,
         'total_operator': DummyData.users
@@ -27,7 +27,7 @@ class SupervisorApi {
       final response = await _dio.get('/notifications');
       final data = response.data['data'] as List<dynamic>;
       return data.map((item) => Map<String, dynamic>.from(item)).toList();
-    } on DioException {
+    } catch (_) {
       return DummyData.notifications();
     }
   }
@@ -37,7 +37,7 @@ class SupervisorApi {
       final response = await _dio.get('/supervisor/monitoring');
       final data = response.data['data'] as List<dynamic>;
       return data.map((item) => Map<String, dynamic>.from(item)).toList();
-    } on DioException {
+    } catch (_) {
       return _fallbackMonitoring(DummyData.seedLogsheets());
     }
   }
@@ -47,7 +47,7 @@ class SupervisorApi {
       final response = await _dio.get('/reports');
       final data = response.data['data'] as List<dynamic>;
       return data.map((item) => Map<String, dynamic>.from(item)).toList();
-    } on DioException {
+    } catch (_) {
       final rows = <Map<String, dynamic>>[];
       final items = DummyData.seedLogsheets();
       for (final unit in DummyData.units) {

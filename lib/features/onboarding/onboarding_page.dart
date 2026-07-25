@@ -51,7 +51,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
       description:
           'Input data mesin terstruktur dan rapi — langsung dari lapangan.',
       icon: Icons.description_outlined,
-      imageAsset: 'assets/images/onboarding/onboarding_laporan.jpg',
+      imageAsset: 'assets/images/onboarding_laporan.jpg',
       orbColor1: Color(0xFF22C55E),
       orbColor2: Color(0xFF10B981),
     ),
@@ -61,7 +61,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
       description:
           'Validasi titik operator dan dokumentasi mesin dengan akurasi tinggi.',
       icon: Icons.location_on_outlined,
-      imageAsset: 'assets/images/onboarding/onboarding_gps.jpg',
+      imageAsset: 'assets/images/onboarding_gps.jpg',
       orbColor1: Color(0xFF14B8A6),
       orbColor2: Color(0xFF06B6D4),
     ),
@@ -71,7 +71,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
       description:
           'Data tersimpan aman dan tersinkron otomatis ketika online kembali.',
       icon: Icons.cloud_off_outlined,
-      imageAsset: 'assets/images/onboarding/onboarding_offline.jpg',
+      imageAsset: 'assets/images/onboarding_offline.jpg',
       orbColor1: Color(0xFF84CC16),
       orbColor2: Color(0xFF22C55E),
     ),

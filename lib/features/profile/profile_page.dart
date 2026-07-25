@@ -14,6 +14,7 @@ import '../errors/error_log_page.dart';
 import '../notifications/notification_page.dart';
 import '../supervisor/admin_management_page.dart';
 import '../supervisor/system_control_page.dart';
+import '../../data/repositories/user_repository.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -455,7 +456,9 @@ class ProfilePage extends ConsumerWidget {
   ) async {
     if (user == null) return;
     final nameController = TextEditingController(text: user.name);
+    final usernameController = TextEditingController(text: user.username);
     final unitController = TextEditingController(text: user.unitName);
+    
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -465,12 +468,17 @@ class ProfilePage extends ConsumerWidget {
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nama tampil'),
+              decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: usernameController,
+              decoration: const InputDecoration(labelText: 'Username'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: unitController,
-              decoration: const InputDecoration(labelText: 'Unit default'),
+              decoration: const InputDecoration(labelText: 'Nama Unit'),
             ),
           ],
         ),
@@ -486,19 +494,53 @@ class ProfilePage extends ConsumerWidget {
         ],
       ),
     );
-    if (saved != true) return;
-    await ref.read(authControllerProvider.notifier).updateUser(
-          user.copyWith(
-            name: nameController.text.trim().isEmpty
-                ? user.name
-                : nameController.text.trim(),
-            unitName: unitController.text.trim().isEmpty
-                ? user.unitName
-                : unitController.text.trim(),
-          ),
-        );
-    if (!context.mounted) return;
-    _snack(context, 'Profil berhasil diperbarui secara lokal.');
+
+    if (saved != true || !context.mounted) return;
+
+    // Show loading dialog
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final updatedName = nameController.text.trim();
+      final updatedUsername = usernameController.text.trim();
+      final updatedUnit = unitController.text.trim();
+
+      if (updatedName.isEmpty || updatedUsername.isEmpty) {
+        throw Exception('Nama dan Username tidak boleh kosong');
+      }
+
+      // Update backend via API
+      final updatedUser = await ref.read(userRepositoryProvider).updateUser(
+            id: user.id,
+            name: updatedName,
+            username: updatedUsername,
+            unitName: updatedUnit,
+            unitId: user.unitId, // keep existing unit ID
+            role: user.role.name, // keep existing role
+          );
+
+      // Close loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      // Update local storage and app state
+      await ref.read(authControllerProvider.notifier).updateUser(updatedUser);
+
+      if (context.mounted) {
+        _snack(context, 'Profil berhasil diperbarui.');
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      if (context.mounted) {
+        final message = e.toString().replaceFirst('Exception: ', '');
+        _snack(context, 'Gagal memperbarui profil: $message');
+      }
+    }
   }
 
   Future<void> _showChangePasswordDialog(BuildContext context) async {

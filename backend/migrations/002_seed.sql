@@ -37,12 +37,13 @@ INSERT INTO machines (id, unit_id, up3, machine_name, brand, machine_type, seria
 -- ============================================================
 -- Password: 123 (bcrypt hash)
 INSERT INTO users (id, name, username, password, role, unit_id, unit_name) VALUES
-('AD1', 'Admin Nusa Daya', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin', 'U01', 'PLTD KRAYAN'),
-('SA1', 'Super Admin', 'superadmin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'superadmin', NULL, 'ALL'),
-('SP1', 'Supervisor Wilayah', 'supervisor', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'supervisor', 'U01', 'PLTD KRAYAN'),
-('OP1', 'Operator Krayan', 'operator', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'operator', 'U01', 'PLTD KRAYAN'),
-('OP2', 'Operator Long Layu', 'operator2', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'operator', 'U02', 'PLTD LONG LAYU'),
-('OP3', 'Operator Lumbis', 'operator3', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'operator', 'U03', 'PLTD LUMBIS');
+('AD1', 'Admin Nusa Daya', 'admin', '$2a$10$B70P/0GCACqAhOQJReYY.eq5BMpAOT32HYgulSg55uQzKrFVInQhG', 'admin', 'U01', 'PLTD KRAYAN'),
+('SA1', 'Super Admin', 'superadmin', '$2a$10$B70P/0GCACqAhOQJReYY.eq5BMpAOT32HYgulSg55uQzKrFVInQhG', 'superadmin', NULL, 'ALL'),
+('SA2', 'Superadmin KAL 3', 'kal3', '$2a$10$J7H3QqeoJ95NjLeET6N0Y.mPdNGVXf5e9Tyq2qJQJ.PRC6ACLkxsu', 'superadmin', NULL, 'ALL'),
+('SP1', 'Supervisor Wilayah', 'supervisor', '$2a$10$B70P/0GCACqAhOQJReYY.eq5BMpAOT32HYgulSg55uQzKrFVInQhG', 'supervisor', 'U01', 'PLTD KRAYAN'),
+('OP1', 'Operator Krayan', 'operator', '$2a$10$B70P/0GCACqAhOQJReYY.eq5BMpAOT32HYgulSg55uQzKrFVInQhG', 'operator', 'U01', 'PLTD KRAYAN'),
+('OP2', 'Operator Long Layu', 'operator2', '$2a$10$B70P/0GCACqAhOQJReYY.eq5BMpAOT32HYgulSg55uQzKrFVInQhG', 'operator', 'U02', 'PLTD LONG LAYU'),
+('OP3', 'Operator Lumbis', 'operator3', '$2a$10$B70P/0GCACqAhOQJReYY.eq5BMpAOT32HYgulSg55uQzKrFVInQhG', 'operator', 'U03', 'PLTD LUMBIS');
 
 -- ============================================================
 -- SAMPLE LOGSHEETS

@@ -19,7 +19,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: Colors.transparent,
+      scaffoldBackgroundColor: AppColors.background,
       fontFamily: TextStyles.fontFamily,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -145,7 +145,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: Colors.transparent,
+      scaffoldBackgroundColor: AppColors.darkBackground,
       fontFamily: TextStyles.fontFamily,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,

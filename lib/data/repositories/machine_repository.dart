@@ -5,6 +5,7 @@ import '../../core/network/dio_client.dart';
 import '../dummy/dummy_data.dart';
 import '../local/master_data_datasource.dart';
 import '../models/machine_model.dart';
+import '../models/unit_model.dart';
 import '../remote/machine_api.dart';
 
 final machineRepositoryProvider = Provider<MachineRepository>((ref) {
@@ -20,6 +21,25 @@ class MachineRepository {
   final MachineApi _api;
   final MasterDataDatasource _datasource;
   final _uuid = const Uuid();
+
+  /// Fetch machines for a specific unit using the DIGIKIT format-logsheet API.
+  /// This is the preferred method for the InputLogsheetPage.
+  Future<List<MachineModel>> getMachinesForUnit(UnitModel unit) async {
+    // kdArea is required for the format-logsheet endpoint.
+    // If kdArea is missing (e.g. legacy dummy unit), fall back to local cache.
+    if (unit.kdArea.isEmpty) {
+      final all = await getAllMachines();
+      final filtered = all.where((m) => m.unitId == unit.id).toList();
+      if (filtered.isNotEmpty) return filtered;
+      return DummyData.machinesByUnit(unit.id);
+    }
+
+    return _api.getMachinesByUnit(
+      kdUnit: unit.id,
+      kdArea: unit.kdArea,
+      namaUnit: unit.name,
+    );
+  }
 
   Future<List<MachineModel>> getAllMachines() async {
     final cached = await _datasource.fetchMachines();

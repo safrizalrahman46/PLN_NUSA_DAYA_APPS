@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -8,6 +9,8 @@ final permissionServiceProvider = Provider<PermissionService>(
 
 class PermissionService {
   Future<bool> ensureCameraPermission(BuildContext context) async {
+    // Web: browser handles camera permission via MediaDevices API
+    if (kIsWeb) return true;
     return _ensurePermission(
       context,
       permission: Permission.camera,
@@ -17,6 +20,8 @@ class PermissionService {
   }
 
   Future<bool> ensureLocationPermission(BuildContext context) async {
+    // Web: browser handles location permission via Geolocation API
+    if (kIsWeb) return true;
     return _ensurePermission(
       context,
       permission: Permission.location,

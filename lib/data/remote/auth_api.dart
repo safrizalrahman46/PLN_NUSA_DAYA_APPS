@@ -9,20 +9,33 @@ class AuthApi {
 
   final Dio _dio;
 
+  /// Login ke backend lokal (POST /login)
+  /// Backend mengembalikan:
+  ///   { message, data: { id, name, username, role, unit_id, unit_name, token } }
   Future<UserModel> login(String username, String password) async {
     try {
       final response = await _dio.post(
         '/login',
         data: {'username': username, 'password': password},
       );
-      final data = response.data['data'] ?? response.data;
-      return UserModel.fromJson(Map<String, dynamic>.from(data));
-    } on DioException {
-      final user = DummyData.authenticate(username, password);
-      if (user == null) {
-        throw ApiException('Username atau password tidak valid');
+      final respData = response.data as Map<String, dynamic>;
+      // Backend return: { message, data: { ..., token } }
+      final rawUser = Map<String, dynamic>.from(
+        (respData['data'] ?? respData['user'] ?? respData) as Map,
+      );
+      // Token bisa ada di dalam data atau di level atas
+      if ((rawUser['token'] ?? '').toString().isEmpty) {
+        rawUser['token'] = respData['token']?.toString() ?? '';
       }
-      return user;
+      return UserModel.fromJson(rawUser);
+    } on DioException catch (e) {
+      // Fallback ke dummy data saat server tidak tersedia
+      final user = DummyData.authenticate(username, password);
+      if (user != null) return user;
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Username atau password tidak valid',
+      );
     }
   }
 
@@ -38,7 +51,7 @@ class AuthApi {
     try {
       final response = await _dio.get('/me');
       final data = response.data['data'] ?? response.data;
-      return UserModel.fromJson(Map<String, dynamic>.from(data));
+      return UserModel.fromJson(Map<String, dynamic>.from(data as Map));
     } on DioException {
       return null;
     }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_config.dart';
 import '../../core/network/dio_client.dart';
 import '../models/unit_model.dart';
 import '../remote/unit_api.dart';
@@ -13,5 +14,6 @@ class UnitRepository {
 
   final UnitApi _api;
 
-  Future<List<UnitModel>> getUnits() => _api.getUnits();
+  Future<List<UnitModel>> getUnits({String kdRegion = AppConfig.kdRegion}) =>
+      _api.getUnits(kdRegion: kdRegion);
 }

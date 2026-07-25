@@ -102,8 +102,21 @@ class ReportExportPage extends ConsumerWidget {
                   onTap: records.isEmpty
                       ? null
                       : () async {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Menyiapkan file PDF...'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
                           try {
                             await service.sharePdf(payload);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('File PDF berhasil dibuat!'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
                           } catch (error, stackTrace) {
                             await ref.read(errorLogRepositoryProvider).logException(
                                   error: error,
@@ -127,8 +140,21 @@ class ReportExportPage extends ConsumerWidget {
                   onTap: records.isEmpty
                       ? null
                       : () async {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Menyiapkan file Excel...'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
                           try {
                             await service.shareExcel(payload);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('File Excel berhasil dibuat!'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
                           } catch (error, stackTrace) {
                             await ref.read(errorLogRepositoryProvider).logException(
                                   error: error,

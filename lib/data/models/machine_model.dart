@@ -133,32 +133,58 @@ class MachineModel {
 
   factory MachineModel.fromJson(Map<String, dynamic> json) {
     return MachineModel(
-      id: json['id']?.toString() ?? '',
-      unitId: json['unitId']?.toString() ?? '',
-      up3: json['up3']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['id_mesin']?.toString() ?? '',
+      unitId:
+          json['unitId']?.toString() ?? json['kd_unit']?.toString() ?? '',
+      up3: json['up3']?.toString() ?? json['kd_unit']?.toString() ?? '',
       machineName:
           json['machineName']?.toString() ??
           json['name']?.toString() ??
+          json['nama_mesin']?.toString() ??
           json['serialNumber']?.toString() ??
           '',
-      brand: json['brand']?.toString() ?? '',
+      brand:
+          json['brand']?.toString() ?? json['merk']?.toString() ?? '',
       machineType:
-          json['machineType']?.toString() ?? json['type']?.toString() ?? '',
-      serialNumber: json['serialNumber']?.toString() ?? '',
+          json['machineType']?.toString() ??
+          json['type']?.toString() ??
+          '',
+      serialNumber:
+          json['serialNumber']?.toString() ??
+          json['no_seri']?.toString() ??
+          json['sn']?.toString() ??
+          '',
       generatorCode:
-          json['generatorCode']?.toString() ?? json['code']?.toString() ?? '',
+          json['generatorCode']?.toString() ??
+          json['code']?.toString() ??
+          json['kode_mesin_silm']?.toString() ??
+          '',
       ownershipStatus:
           json['ownershipStatus']?.toString() ??
           json['ownership']?.toString() ??
+          json['kd_kepemilikan']?.toString() ??
           '',
       performanceLabel:
           json['performanceLabel']?.toString() ??
           json['performance']?.toString() ??
           '',
-      capacity: json['capacity']?.toString() ?? '',
-      availableCapacity: json['availableCapacity']?.toString() ?? '',
-      dispatchCapacity: json['dispatchCapacity']?.toString() ?? '',
-      status: json['status']?.toString() ?? 'active',
+      capacity:
+          json['capacity']?.toString() ??
+          json['daya_terpasang']?.toString() ??
+          json['dt']?.toString() ??
+          '',
+      availableCapacity:
+          json['availableCapacity']?.toString() ??
+          json['daya_mampu']?.toString() ??
+          '',
+      dispatchCapacity:
+          json['dispatchCapacity']?.toString() ??
+          json['daya_mampu']?.toString() ??
+          '',
+      status:
+          json['status']?.toString() ??
+          json['kd_status_mesin']?.toString() ??
+          'active',
       conditionLabel:
           json['conditionLabel']?.toString() ??
           json['condition']?.toString() ??

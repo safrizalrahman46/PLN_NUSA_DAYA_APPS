@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class DigikitLog extends Model
+{
+    protected $fillable = [
+        'user_id',
+        'endpoint',
+        'method',
+        'request_payload',
+        'response_payload',
+        'status_code',
+        'error_message',
+        'duration_ms',
+    ];
+
+    protected $casts = [
+        'request_payload' => 'array',
+        'response_payload' => 'array',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}

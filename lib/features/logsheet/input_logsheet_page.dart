@@ -31,11 +31,12 @@ final unitsProvider = FutureProvider<List<UnitModel>>((ref) {
   return ref.read(unitRepositoryProvider).getUnits();
 });
 
-final machinesProvider = FutureProvider.family<List<MachineModel>, String>((
+// Pass the full UnitModel so kdArea is available for the format-logsheet endpoint
+final machinesProvider = FutureProvider.family<List<MachineModel>, UnitModel>((
   ref,
-  unitId,
+  unit,
 ) {
-  return ref.read(machineRepositoryProvider).getMachines(unitId);
+  return ref.read(machineRepositoryProvider).getMachinesForUnit(unit);
 });
 
 class InputLogsheetPage extends ConsumerStatefulWidget {
@@ -80,7 +81,7 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
     final appSettings = ref.watch(appSettingsProvider);
     final machines = form.selectedUnit == null
         ? const AsyncValue<List<MachineModel>>.data([])
-        : ref.watch(machinesProvider(form.selectedUnit!.id));
+        : ref.watch(machinesProvider(form.selectedUnit!));
     final isBatchMode =
         widget.initialUnitId != null && widget.initialLogsheet == null;
 

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/constants/app_colors.dart';
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
 import 'core/theme/app_theme.dart';
 import 'data/repositories/retention_repository.dart';
 import 'features/profile/settings_controller.dart';
+import 'features/splash/splash_page.dart';
 import 'features/sync/sync_service.dart';
 
 class PltdLogsheetApp extends ConsumerStatefulWidget {
@@ -38,6 +38,8 @@ class _PltdLogsheetAppState extends ConsumerState<PltdLogsheetApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: settings.themeMode,
+      home: const SplashPage(),
+      onGenerateRoute: AppRoutes.onGenerateRoute,
       locale: const Locale('id', 'ID'),
       supportedLocales: const [Locale('id', 'ID')],
       localizationsDelegates: const [
@@ -45,27 +47,6 @@ class _PltdLogsheetAppState extends ConsumerState<PltdLogsheetApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      onGenerateRoute: AppRoutes.onGenerateRoute,
-      initialRoute: AppRoutes.splash,
-      builder: (context, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            gradient: isDark
-                ? AppColors.darkGradient
-                : const LinearGradient(
-                    colors: [
-                      Color(0xFFEAF2FF),
-                      Color(0xFFF2F6FC),
-                      Color(0xFFE7F0FF),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-          ),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
     );
   }
 }
