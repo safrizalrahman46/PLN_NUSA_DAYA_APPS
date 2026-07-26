@@ -50,8 +50,8 @@ class GpsStatusCard extends StatelessWidget {
               const SizedBox(width: 12),
               const Expanded(
                 child: SectionTitle(
-                  title: 'Validasi GPS',
-                  subtitle: 'Validasi posisi operator saat submit',
+                  title: 'Validasi GPS (Opsional)',
+                  subtitle: 'Validasi posisi operator saat submit (Opsional)',
                 ),
               ),
             ],

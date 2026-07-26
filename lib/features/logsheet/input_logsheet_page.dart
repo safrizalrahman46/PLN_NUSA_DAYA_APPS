@@ -97,9 +97,8 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
         form.selectedMachine != null &&
         form.machineStatus != null;
     final step2Done = filledCount >= InputLogsheetPage._paramKeys.length;
-    final step3Done = form.location != null;
-    final step4Done =
-        form.selfiePath.isNotEmpty && form.machinePhotoPath.isNotEmpty;
+    final step3Done = form.location != null || true; // GPS optional per feedback
+    final step4Done = true; // Foto optional per feedback
     final gpsSessionLabel = form.sharedLocation == null
         ? 'Lokasi unit cukup diambil sekali. Setelah tersimpan, GPS akan dipakai ulang untuk mesin lain pada unit yang sama.'
         : form.isUsingSharedLocation

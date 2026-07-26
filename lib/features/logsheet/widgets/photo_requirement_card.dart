@@ -52,11 +52,10 @@ class PhotoRequirementCard extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
               const Expanded(
                 child: SectionTitle(
                   title: 'Absen Petugas & Foto Mesin',
-                  subtitle: 'Absen petugas dan foto mesin wajib diambil',
+                  subtitle: 'Absen petugas dan foto mesin (Opsional)',
                 ),
               ),
             ],

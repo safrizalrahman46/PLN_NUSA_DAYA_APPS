@@ -43,6 +43,7 @@ class AppTheme {
           shadowColor: Colors.transparent,
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(52),
           textStyle: TextStyles.titleMedium(Colors.white),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -52,6 +53,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
+          minimumSize: const Size.fromHeight(52),
           textStyle: TextStyles.titleMedium(AppColors.primary),
           side: const BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(
@@ -160,6 +162,29 @@ class AppTheme {
         color: AppColors.darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: AppColors.accent,
+          foregroundColor: AppColors.darkBackground,
+          minimumSize: const Size.fromHeight(52),
+          textStyle: TextStyles.titleMedium(AppColors.darkBackground),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accent,
+          minimumSize: const Size.fromHeight(52),
+          textStyle: TextStyles.titleMedium(AppColors.accent),
+          side: const BorderSide(color: AppColors.darkBorder),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,

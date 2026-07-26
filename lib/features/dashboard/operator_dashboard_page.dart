@@ -29,6 +29,7 @@ import 'widgets/next_report_card.dart';
 import 'widgets/quick_action_grid.dart';
 import 'widgets/report_donut_chart.dart';
 import 'widgets/summary_card.dart';
+import 'widgets/time_slot_matrix_card.dart';
 import 'widgets/today_report_status.dart';
 import 'widgets/unit_quick_access_card.dart';
 
@@ -225,10 +226,15 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                         ),
                       ),
                     ),
+                  const SizedBox(height: 18),
+                  _AnimatedSection(
+                    index: 3,
+                    animateIn: _animateIn,
+                    child: const TimeSlotMatrixCard(),
                   ),
                   const SizedBox(height: 18),
                     _AnimatedSection(
-                      index: 3,
+                      index: 4,
                       animateIn: _animateIn,
                       child: unitsAsync.when(
                         data: (items) => UnitQuickAccessCard(

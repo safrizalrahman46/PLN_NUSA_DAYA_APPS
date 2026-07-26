@@ -533,7 +533,7 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
 
   String? validateSnapshot(
     MachineDraftSnapshot? snapshot, {
-    bool requireAttachments = true,
+    bool requireAttachments = false,
   }) {
     if (snapshot == null) return 'Data mesin belum tersedia';
     if (snapshot.machineStatus == null) return 'Status mesin wajib dipilih';
@@ -543,10 +543,11 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
         return '${_requiredFieldLabel(key)} wajib diisi';
       }
     }
+    // Attachments (Photos & GPS) are optional per field feedback so submission is never blocked
     if (requireAttachments) {
-      if (snapshot.selfiePath.isEmpty) return 'Absen petugas wajib diambil';
-      if (snapshot.machinePhotoPath.isEmpty) return 'Foto mesin wajib diambil';
-      if (snapshot.location == null) return 'Lokasi GPS wajib diambil';
+      if (snapshot.selfiePath.isEmpty && snapshot.machinePhotoPath.isEmpty) {
+        // Optional notice if needed, but not blocking
+      }
     }
     return null;
   }
