@@ -386,6 +386,7 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
                 selectedUnit: form.selectedUnit,
                 selectedMachine: form.selectedMachine,
                 machineStatus: form.machineStatus,
+                selectedTimeSlot: form.selectedTimeSlot,
                 units: unitItems,
                 machines: machines,
                 onUnitChanged: (value) {
@@ -405,6 +406,7 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
                   controller.setMachine(value);
                 },
                 onMachineStatusChanged: controller.setMachineStatus,
+                onTimeSlotChanged: controller.setTimeSlot,
               ),
               const SizedBox(height: 16),
               ParameterInputSection(

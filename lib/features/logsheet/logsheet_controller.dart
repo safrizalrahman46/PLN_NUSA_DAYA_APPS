@@ -104,6 +104,8 @@ class LogsheetFormState {
     this.selectedUnit,
     this.selectedMachine,
     this.machineStatus,
+    this.selectedTimeSlot = '',
+    this.selectedDate,
     this.values = const {},
     this.notes = '',
     this.fieldCondition = '',
@@ -127,6 +129,8 @@ class LogsheetFormState {
   final UnitModel? selectedUnit;
   final MachineModel? selectedMachine;
   final MachineStatus? machineStatus;
+  final String selectedTimeSlot;
+  final DateTime? selectedDate;
   final Map<String, String> values;
   final String notes;
   final String fieldCondition;
@@ -169,6 +173,8 @@ class LogsheetFormState {
     Object? selectedUnit = _unset,
     Object? selectedMachine = _unset,
     Object? machineStatus = _unset,
+    String? selectedTimeSlot,
+    DateTime? selectedDate,
     Map<String, String>? values,
     String? notes,
     String? fieldCondition,
@@ -199,6 +205,8 @@ class LogsheetFormState {
       machineStatus: identical(machineStatus, _unset)
           ? this.machineStatus
           : machineStatus as MachineStatus?,
+      selectedTimeSlot: selectedTimeSlot ?? this.selectedTimeSlot,
+      selectedDate: selectedDate ?? this.selectedDate,
       values: values ?? this.values,
       notes: notes ?? this.notes,
       fieldCondition: fieldCondition ?? this.fieldCondition,
@@ -516,6 +524,14 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
     );
   }
 
+  void setTimeSlot(String timeSlot) {
+    state = state.copyWith(selectedTimeSlot: timeSlot, clearError: true);
+  }
+
+  void setDate(DateTime date) {
+    state = state.copyWith(selectedDate: date, clearError: true);
+  }
+
   String? validateForDraft() {
     if (state.selectedUnit == null) return 'Unit wajib dipilih';
     if (state.selectedMachine == null) return 'Mesin wajib dipilih';
@@ -607,6 +623,15 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
         ? ReportStatus.late
         : ReportStatus.onTime;
 
+    final date = state.selectedDate ?? now;
+    final timeSlot = state.selectedTimeSlot.isNotEmpty
+        ? state.selectedTimeSlot
+        : '${now.hour.toString().padLeft(2, '0')}:00';
+    final timeParts = timeSlot.split(':');
+    final hour = timeParts.length >= 2 ? int.tryParse(timeParts[0]) ?? now.hour : now.hour;
+    final minute = timeParts.length >= 2 ? int.tryParse(timeParts[1]) ?? 0 : 0;
+    final targetSubmittedAt = DateTime(date.year, date.month, date.day, hour, minute);
+
     return LogsheetModel(
       id: '',
       localId: snapshot.localId.isEmpty ? _uuid.v4() : snapshot.localId,
@@ -648,7 +673,7 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
       locationAccuracy: snapshot.location?.accuracy ?? 0,
       distanceFromUnit: snapshot.location?.distanceFromUnit ?? 0,
       locationStatus: snapshot.location?.status ?? LocationStatus.unknown,
-      submittedAt: now,
+      submittedAt: targetSubmittedAt,
       syncStatus: SyncStatus.draft,
       reportStatus: reportStatus,
       abnormalNotes: buildWarnings(

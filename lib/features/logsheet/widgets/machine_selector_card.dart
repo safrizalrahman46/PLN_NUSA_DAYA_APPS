@@ -17,23 +17,26 @@ class MachineSelectorCard extends ConsumerWidget {
     required this.operatorName,
     required this.selectedUnit,
     required this.selectedMachine,
-    required this.machineStatus,
+    required this.selectedTimeSlot,
     required this.units,
     required this.machines,
     required this.onUnitChanged,
     required this.onMachineChanged,
     required this.onMachineStatusChanged,
+    required this.onTimeSlotChanged,
   });
 
   final String operatorName;
   final UnitModel? selectedUnit;
   final MachineModel? selectedMachine;
   final MachineStatus? machineStatus;
+  final String selectedTimeSlot;
   final List<UnitModel> units;
   final AsyncValue<List<MachineModel>> machines;
   final ValueChanged<UnitModel?> onUnitChanged;
   final ValueChanged<MachineModel?> onMachineChanged;
   final ValueChanged<MachineStatus> onMachineStatusChanged;
+  final ValueChanged<String> onTimeSlotChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -137,6 +140,30 @@ class MachineSelectorCard extends ConsumerWidget {
             onSelected: onMachineStatusChanged,
             searchHint: 'Cari status mesin',
           ),
+          const SizedBox(height: 12),
+          AppPickerField<String>(
+            value: selectedTimeSlot.isEmpty
+                ? '${DateTime.now().hour.toString().padLeft(2, '0')}:00'
+                : selectedTimeSlot,
+            label: 'Jam Laporan (Slot Jam)',
+            hint: 'Pilih jam laporan (00:00 - 23:30)',
+            options: [
+              for (int h = 0; h < 24; h++) ...[
+                '${h.toString().padLeft(2, '0')}:00',
+                '${h.toString().padLeft(2, '0')}:30',
+              ]
+            ]
+                .map(
+                  (time) => PickerOption<String>(
+                    value: time,
+                    label: 'Jam $time WITA',
+                    subtitle: 'Slot jam operasional $time',
+                  ),
+                )
+                .toList(),
+            onSelected: onTimeSlotChanged,
+            searchHint: 'Cari jam (contoh: 01:00, 07:00, 14:30)',
+          ),
           if (selectedMachine != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -224,7 +251,7 @@ class MachineSelectorCard extends ConsumerWidget {
               Text(
                 'Mesin unit ini: ${machines.valueOrNull?.length ?? 0} mesin',
               ),
-              Text('Jam laporan: ${DateHelper.formatDateTime(DateTime.now())}'),
+              Text('Jam laporan: ${selectedTimeSlot.isEmpty ? DateHelper.formatDateTime(DateTime.now()) : "Jam $selectedTimeSlot WITA"}'),
               Text('Operator: $operatorName'),
               Text('Koneksi: ${online ? 'Online' : 'Offline'}'),
             ],
