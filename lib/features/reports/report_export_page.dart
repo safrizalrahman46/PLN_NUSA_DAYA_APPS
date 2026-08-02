@@ -179,15 +179,8 @@ class ReportExportPage extends ConsumerWidget {
 
   String _fileNameBase(String period) {
     final now = DateTime.now();
-    final safePeriod = period.replaceAll(' ', '_');
-    final datePart = switch (period) {
-      'Harian' => DateFormat('yyyy-MM-dd').format(now),
-      'Mingguan' => DateFormat('MMMM_yyyy', 'id_ID').format(now),
-      'Bulanan' => DateFormat('MMMM_yyyy', 'id_ID').format(now),
-      'Tahunan' => DateFormat('yyyy').format(now),
-      _ => DateFormat('yyyy-MM-dd').format(now),
-    };
-    return 'Laporan_PLN_Nusa_Daya_${safePeriod}_$datePart';
+    final dateStr = DateFormat('yyyy-MM-dd').format(now);
+    return 'Laporan_Logsheet_PLTD_$dateStr';
   }
 }
 

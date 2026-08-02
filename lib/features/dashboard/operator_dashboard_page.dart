@@ -226,6 +226,7 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                         ),
                       ),
                     ),
+                  ),
                   const SizedBox(height: 18),
                   _AnimatedSection(
                     index: 3,
@@ -233,9 +234,9 @@ class _OperatorDashboardPageState extends ConsumerState<OperatorDashboardPage> {
                     child: const TimeSlotMatrixCard(),
                   ),
                   const SizedBox(height: 18),
-                    _AnimatedSection(
-                      index: 4,
-                      animateIn: _animateIn,
+                  _AnimatedSection(
+                    index: 4,
+                    animateIn: _animateIn,
                       child: unitsAsync.when(
                         data: (items) => UnitQuickAccessCard(
                           units: items,

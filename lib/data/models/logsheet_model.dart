@@ -36,6 +36,7 @@ class LogsheetModel {
     required this.tegangan,
     required this.cosPhi,
     required this.frequency,
+    this.jamKerjaMesin = 0.0,
     required this.notes,
     required this.selfiePhotoPath,
     required this.machinePhotoPath,
@@ -92,6 +93,7 @@ class LogsheetModel {
   final double tegangan;
   final double cosPhi;
   final double frequency;
+  final double jamKerjaMesin;
   final String notes;
   final String selfiePhotoPath;
   final String machinePhotoPath;
@@ -363,6 +365,7 @@ class LogsheetModel {
     'tegangan': tegangan,
     'cosPhi': cosPhi,
     'frequency': frequency,
+    'jamKerjaMesin': jamKerjaMesin,
     'notes': notes,
     'selfiePhotoPath': selfiePhotoPath,
     'machinePhotoPath': machinePhotoPath,
@@ -452,6 +455,7 @@ class LogsheetModel {
       tegangan: NumberHelper.parseDynamic(json['tegangan']),
       cosPhi: NumberHelper.parseDynamic(json['cosPhi']),
       frequency: NumberHelper.parseDynamic(json['frequency']),
+      jamKerjaMesin: NumberHelper.parseDynamic(json['jamKerjaMesin'] ?? json['jam_kerja_mesin']),
       notes: json['notes']?.toString() ?? '',
       selfiePhotoPath: json['selfiePhotoPath']?.toString() ?? '',
       machinePhotoPath: json['machinePhotoPath']?.toString() ?? '',

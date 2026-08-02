@@ -128,6 +128,24 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
         title: const Text('Input Logsheet'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Refresh Data dari WACB',
+            icon: const Icon(Icons.sync_rounded),
+            onPressed: () {
+              ref.invalidate(unitsProvider);
+              if (form.selectedUnit != null) {
+                ref.invalidate(machinesProvider(form.selectedUnit!));
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Memperbarui data unit & mesin terbaru dari WACB...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       bottomNavigationBar: SubmitBottomBar(
         isSaving: form.isSaving,
