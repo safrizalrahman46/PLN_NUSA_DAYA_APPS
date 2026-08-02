@@ -17,6 +17,7 @@ class MachineSelectorCard extends ConsumerWidget {
     required this.operatorName,
     required this.selectedUnit,
     required this.selectedMachine,
+    required this.machineStatus,
     required this.selectedTimeSlot,
     required this.units,
     required this.machines,
