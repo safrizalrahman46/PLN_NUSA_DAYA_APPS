@@ -152,7 +152,8 @@ class MachineSelectorCard extends ConsumerWidget {
               for (int h = 0; h < 24; h++) ...[
                 '${h.toString().padLeft(2, '0')}:00',
                 '${h.toString().padLeft(2, '0')}:30',
-              ]
+              ],
+              '24:00',
             ]
                 .map(
                   (time) => PickerOption<String>(

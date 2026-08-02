@@ -11,18 +11,23 @@ class LogsheetApi {
   final Dio _dio;
 
   String _buildMessageText(LogsheetModel logsheet) {
+    final timeStr = logsheet.submittedAt.hour == 0 && logsheet.submittedAt.minute == 0
+        ? '00:00'
+        : '${logsheet.submittedAt.hour.toString().padLeft(2, '0')}:${logsheet.submittedAt.minute.toString().padLeft(2, '0')}';
+    final dateStr = logsheet.submittedAt.toIso8601String().substring(0, 10);
+
     return 'LAPORAN LOGSHEET PLTD\n'
         '${logsheet.unitName}\n'
         'id unit: ${logsheet.unitId}\n'
-        'tgl : ${logsheet.submittedAt.toIso8601String().substring(0, 10)}\n'
-        'jam : ${logsheet.submittedAt.toIso8601String().substring(11, 16)}\n'
+        'tgl : $dateStr\n'
+        'jam : $timeStr\n'
         'nama operator: ${logsheet.operatorName}\n'
         '\n'
         '1. ${logsheet.machineName}\n'
         'id mesin: ${logsheet.machineId}\n'
-        'kode mesin: \n'
+        'kode mesin: ${logsheet.machineGeneratorCode}\n'
         'sn: ${logsheet.serialNumber}\n'
-        'dt: \n'
+        'dt: ${logsheet.machineInstalledCapacity}\n'
         'daya mampu: ${logsheet.machineDispatchCapacity.isNotEmpty ? logsheet.machineDispatchCapacity : logsheet.machineAvailableCapacity}\n'
         'beban: ${logsheet.bebanMesin}\n'
         'stand kwh: ${logsheet.standKwh}\n'
