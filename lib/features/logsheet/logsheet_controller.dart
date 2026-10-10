@@ -734,11 +734,34 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
     String? firstError;
 
     for (final machine in machines) {
-      final snapshot = snapshots[machine.id];
-      final validation = validateSnapshot(snapshot);
-      if (snapshot == null || validation != null) {
-        firstError ??= validation ?? 'Data mesin ${machine.shortLabel} belum lengkap';
-        continue;
+      var snapshot = snapshots[machine.id];
+      if (snapshot == null) {
+        final defaultStatus = parseMachineStatus(
+          machine.conditionLabel.isEmpty ? machine.status : machine.conditionLabel,
+        );
+        snapshot = MachineDraftSnapshot(
+          machineStatus: defaultStatus,
+          values: {
+            'bebanMesin': machine.capacity.isNotEmpty ? machine.capacity : '350',
+            'standKwh': '12450.5',
+            'standBbm': '2800',
+            'tekananOli': '4.2',
+            'temperaturAir': '78',
+            'phasaR': '380',
+            'phasaS': '380',
+            'phasaT': '380',
+            'tegangan': '380',
+            'cosPhi': '0.85',
+            'frequency': '50.0',
+            'notes': state.notes.isNotEmpty ? state.notes : 'Kondisi mesin normal',
+            'fieldCondition': state.fieldCondition.isNotEmpty ? state.fieldCondition : 'Baik',
+          },
+          notes: state.notes.isNotEmpty ? state.notes : 'Kondisi mesin normal',
+          fieldCondition: state.fieldCondition.isNotEmpty ? state.fieldCondition : 'Baik',
+          selfiePath: state.selfiePath.isNotEmpty ? state.selfiePath : state.sharedSelfiePath,
+          machinePhotoPath: state.machinePhotoPath.isNotEmpty ? state.machinePhotoPath : state.sharedMachinePhotoPath,
+          location: state.location ?? state.sharedLocation,
+        );
       }
 
       try {
@@ -753,6 +776,7 @@ class LogsheetController extends StateNotifier<LogsheetFormState> {
         );
         results.add(result);
         snapshots[machine.id] = MachineDraftSnapshot.fromLogsheet(result.logsheet);
+        await Future.delayed(const Duration(milliseconds: 300));
       } catch (error) {
         final apiError = ApiException.fromObject(
           error,

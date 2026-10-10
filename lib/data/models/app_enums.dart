@@ -56,11 +56,11 @@ extension MachineStatusX on MachineStatus {
   String get apiValue {
     switch (this) {
       case MachineStatus.operasi:
-        return 'operasi';
+        return 'OPERASI';
       case MachineStatus.standby:
-        return 'standby';
+        return 'STANDBY';
       case MachineStatus.gangguanRusak:
-        return 'gangguan-rusak';
+        return 'GANGGUAN';
     }
   }
 }

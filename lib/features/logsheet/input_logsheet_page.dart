@@ -18,6 +18,10 @@ import '../profile/settings_controller.dart';
 import '../camera/camera_capture_page.dart';
 import '../location/gps_validation_page.dart';
 import '../location/location_service.dart';
+import '../history/history_page.dart';
+import '../reports/report_page.dart';
+import '../dashboard/operator_dashboard_page.dart';
+import '../dashboard/widgets/time_slot_matrix_card.dart';
 import 'logsheet_controller.dart';
 import 'submission_success_page.dart';
 import 'widgets/gps_status_card.dart';
@@ -45,11 +49,13 @@ class InputLogsheetPage extends ConsumerStatefulWidget {
     this.initialUnitId,
     this.initialMachineId,
     this.initialLogsheet,
+    this.initialTimeSlot,
   });
 
   final String? initialUnitId;
   final String? initialMachineId;
   final LogsheetModel? initialLogsheet;
+  final String? initialTimeSlot;
 
   static const _paramKeys = [
     ...LogsheetController.numericParameterKeys,
@@ -168,19 +174,18 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
           ).showSnackBar(SnackBar(content: Text(result.message)));
         },
         onSubmit: () async {
-          if (isBatchMode) {
-            if (machineItems.isEmpty || completedMachines != machineItems.length) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Tombol submit baru aktif setelah semua mesin pada unit ini lengkap.',
-                  ),
-                ),
-              );
-              return;
-            }
-            final results = await controller.submitAll(user, machineItems);
+          void invalidateProviders() {
+            ref.invalidate(historyProvider);
+            ref.invalidate(reportLogsProvider);
+            ref.invalidate(operatorSummaryProvider);
+            ref.invalidate(todayTimeSlotsProvider);
+          }
+
+          if (isBatchMode || (machineItems.length > 1 && form.selectedMachine != null)) {
+            final targetMachines = machineItems.isNotEmpty ? machineItems : [form.selectedMachine!];
+            final results = await controller.submitAll(user, targetMachines);
             if (!context.mounted || results.isEmpty) return;
+            invalidateProviders();
             Navigator.pushReplacement(
               context,
               MaterialPageRoute<void>(
@@ -197,6 +202,7 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
 
           final result = await controller.submit(user);
           if (!context.mounted || result == null) return;
+          invalidateProviders();
           Navigator.pushReplacement(
             context,
             MaterialPageRoute<void>(
@@ -241,6 +247,9 @@ class _InputLogsheetPageState extends ConsumerState<InputLogsheetPage> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 controller.setUnit(defaultUnit);
+                if (widget.initialTimeSlot != null && widget.initialTimeSlot!.isNotEmpty) {
+                  controller.setTimeSlot(widget.initialTimeSlot!);
+                }
               }
             });
           }

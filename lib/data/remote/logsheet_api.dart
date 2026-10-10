@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../core/network/api_exception.dart';
-import '../dummy/dummy_data.dart';
 import '../models/app_enums.dart';
 import '../models/logsheet_model.dart';
 
@@ -41,7 +40,7 @@ class LogsheetApi {
         'frequency: ${logsheet.frequency}\n'
         'cos phi: ${logsheet.cosPhi}\n'
         'jam kerja mesin: ${logsheet.jamKerjaMesin > 0 ? logsheet.jamKerjaMesin : ''}\n'
-        'status mesin: ${logsheet.machineStatus.apiValue.toUpperCase()}\n'
+        'status mesin: ${logsheet.machineStatus.apiValue}\n'
         'Kwh produksi : \n'
         'pemakaian bbm : \n'
         'jenis bahan bakar : B35\n'
@@ -124,19 +123,18 @@ class LogsheetApi {
   Future<List<LogsheetModel>> getHistory() async {
     try {
       final response = await _dio.get(
-        '/logsheet',
+        '/v1/logsheet-pltd',
         queryParameters: {
           'kd_region': '05',
-          'tanggal': DateTime.now().toIso8601String().substring(0, 10),
         },
       );
       final data = response.data['data'] as List<dynamic>?;
-      if (data == null) return DummyData.seedLogsheets();
+      if (data == null) return const <LogsheetModel>[];
       return data
           .map((item) => LogsheetModel.fromJson(Map<String, dynamic>.from(item)))
           .toList();
     } catch (_) {
-      return DummyData.seedLogsheets();
+      return const <LogsheetModel>[];
     }
   }
 }

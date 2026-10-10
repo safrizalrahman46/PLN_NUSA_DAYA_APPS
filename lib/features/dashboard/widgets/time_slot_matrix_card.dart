@@ -96,7 +96,9 @@ class TimeSlotMatrixCard extends ConsumerWidget {
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => const InputLogsheetPage(),
+                            builder: (_) => InputLogsheetPage(
+                              initialTimeSlot: label,
+                            ),
                           ),
                         );
                       },

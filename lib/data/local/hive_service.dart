@@ -71,10 +71,7 @@ class HiveService {
       }
 
       await usersBox.clear();
-      
-      for (final item in DummyData.seedLogsheets()) {
-        await logsheetBox.put(item.localId, item.toJson());
-      }
+      // Do not auto-seed fake logsheets so history only contains real user submissions
       
       // Insert default dummy users
       for (final item in DummyData.users) {

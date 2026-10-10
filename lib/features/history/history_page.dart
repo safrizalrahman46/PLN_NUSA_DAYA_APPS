@@ -48,7 +48,14 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final user = ref.watch(authControllerProvider).user;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Logsheet')),
+      appBar: AppBar(
+        title: const Text('Riwayat Logsheet'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Kembali',
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: history.when(

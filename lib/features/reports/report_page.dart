@@ -48,7 +48,14 @@ class _ReportPageState extends ConsumerState<ReportPage> {
     final isCompact = MediaQuery.sizeOf(context).width < 420;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Laporan')),
+      appBar: AppBar(
+        title: const Text('Laporan'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Kembali',
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
       body: logs.when(
         data: (items) {
           final units = items.map((item) => item.unitName).toSet().toList()..sort();
@@ -301,7 +308,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
                             DataColumn(label: Text('Tanggal')),
                             DataColumn(label: Text('Unit')),
                             DataColumn(label: Text('Operator')),
-                            DataColumn(label: Text('Mesin')),
+                            DataColumn(label: Text('Line / Project Code (Mesin)')),
                             DataColumn(label: Text('Status Data')),
                             DataColumn(label: Text('Laporan')),
                             DataColumn(label: Text('Parameter Utama')),

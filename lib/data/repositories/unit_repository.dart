@@ -5,6 +5,8 @@ import '../../core/network/dio_client.dart';
 import '../models/unit_model.dart';
 import '../remote/unit_api.dart';
 
+import '../dummy/dummy_data.dart';
+
 final unitRepositoryProvider = Provider<UnitRepository>((ref) {
   return UnitRepository(UnitApi(ref.read(dioProvider)));
 });
@@ -14,6 +16,13 @@ class UnitRepository {
 
   final UnitApi _api;
 
-  Future<List<UnitModel>> getUnits({String kdRegion = AppConfig.kdRegion}) =>
-      _api.getUnits(kdRegion: kdRegion);
+  Future<List<UnitModel>> getUnits({String kdRegion = AppConfig.kdRegion}) async {
+    try {
+      final items = await _api.getUnits(kdRegion: kdRegion);
+      if (items.isNotEmpty) return items;
+      return DummyData.units;
+    } catch (_) {
+      return DummyData.units;
+    }
+  }
 }

@@ -3,21 +3,26 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/floating_pill_nav.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/network/network_info.dart';
+import '../../data/repositories/logsheet_repository.dart';
 import '../history/history_page.dart';
 import '../logsheet/input_logsheet_page.dart';
 import '../profile/profile_page.dart';
 import '../reports/report_page.dart';
 import '../sync/pending_upload_page.dart';
 import 'operator_dashboard_page.dart';
+import 'widgets/time_slot_matrix_card.dart';
 
-class OperatorShellPage extends StatefulWidget {
+class OperatorShellPage extends ConsumerStatefulWidget {
   const OperatorShellPage({super.key});
 
   @override
-  State<OperatorShellPage> createState() => _OperatorShellPageState();
+  ConsumerState<OperatorShellPage> createState() => _OperatorShellPageState();
 }
 
-class _OperatorShellPageState extends State<OperatorShellPage> {
+class _OperatorShellPageState extends ConsumerState<OperatorShellPage> {
   int _index = 0;
 
   final _pages = const [
@@ -58,6 +63,17 @@ class _OperatorShellPageState extends State<OperatorShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<bool>>(networkStatusProvider, (previous, next) {
+      if (next.value == true && previous?.value != true) {
+        ref.read(logsheetRepositoryProvider).syncPendingLogsheets().then((_) {
+          ref.invalidate(historyProvider);
+          ref.invalidate(reportLogsProvider);
+          ref.invalidate(operatorSummaryProvider);
+          ref.invalidate(todayTimeSlotsProvider);
+        });
+      }
+    });
+
     final isTablet = MediaQuery.of(context).size.width >= 700;
 
     if (isTablet) {

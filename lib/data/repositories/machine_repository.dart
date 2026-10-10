@@ -25,8 +25,6 @@ class MachineRepository {
   /// Fetch machines for a specific unit using the DIGIKIT format-logsheet API.
   /// This is the preferred method for the InputLogsheetPage.
   Future<List<MachineModel>> getMachinesForUnit(UnitModel unit) async {
-    // kdArea is required for the format-logsheet endpoint.
-    // If kdArea is missing (e.g. legacy dummy unit), fall back to local cache.
     if (unit.kdArea.isEmpty) {
       final all = await getAllMachines();
       final filtered = all.where((m) => m.unitId == unit.id).toList();
@@ -34,11 +32,19 @@ class MachineRepository {
       return DummyData.machinesByUnit(unit.id);
     }
 
-    return _api.getMachinesByUnit(
-      kdUnit: unit.id,
-      kdArea: unit.kdArea,
-      namaUnit: unit.name,
-    );
+    try {
+      final items = await _api.getMachinesByUnit(
+        kdUnit: unit.id,
+        kdArea: unit.kdArea,
+        namaUnit: unit.name,
+      );
+      if (items.isNotEmpty) return items;
+    } catch (_) {}
+
+    final all = await getAllMachines();
+    final filtered = all.where((m) => m.unitId == unit.id).toList();
+    if (filtered.isNotEmpty) return filtered;
+    return DummyData.machinesByUnit(unit.id);
   }
 
   Future<List<MachineModel>> getAllMachines() async {

@@ -227,7 +227,6 @@ class LogsheetRepository {
           );
 
     final request = base.copyWith(
-      submittedAt: now,
       updatedAt: now,
       syncStatus: SyncStatus.synced,
       approvalStatus: ApprovalStatus.pendingReview,
