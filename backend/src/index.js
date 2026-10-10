@@ -44,6 +44,49 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Summary Endpoint untuk Integrasi Multi-App
+app.get('/api/summary', async (req, res) => {
+  try {
+    const unitsCount = await pool.query('SELECT COUNT(*) FROM units');
+    const machinesCount = await pool.query('SELECT COUNT(*) FROM machines');
+    const logsheetsCount = await pool.query("SELECT COUNT(*) FROM logsheet_records WHERE tanggal = TO_CHAR(NOW(), 'YYYY-MM-DD')").catch(() => ({ rows: [{ count: 0 }] }));
+    const unreadNotifs = await pool.query('SELECT COUNT(*) FROM notifications WHERE is_read = FALSE');
+
+    res.json({
+      success: true,
+      service: 'PLN_NUSA_DAYA_APPS (Field Operator API)',
+      port: PORT,
+      units_count: parseInt(unitsCount.rows[0].count, 10),
+      machines_count: parseInt(machinesCount.rows[0].count, 10),
+      logsheets_today: parseInt(logsheetsCount.rows[0].count, 10),
+      unread_notifications: parseInt(unreadNotifs.rows[0].count, 10),
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Broadcast Notifikasi Operator Lapangan ke Seluruh Sistem
+app.post('/api/notifications/broadcast', async (req, res) => {
+  try {
+    const { title, description, priority = 'sedang', type = 'logsheet', unit_id } = req.body;
+    const payload = JSON.stringify({ source: 'PLN_NUSA_DAYA_APPS', action_url: '/logsheet/matrix' });
+    const result = await pool.query(
+      `INSERT INTO notifications (title, description, priority, type, target_type, unit_id, is_read, payload, time)
+       VALUES ($1, $2, $3, $4, 'general', $5, FALSE, $6, NOW()) RETURNING *`,
+      [title, description, priority, type, unit_id || '0283', payload]
+    );
+    res.status(201).json({
+      success: true,
+      message: 'Notifikasi operator berhasil disiarkan ke Web & seluruh sistem',
+      data: result.rows[0]
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ message: 'Terjadi kesalahan server', error: err.message });
